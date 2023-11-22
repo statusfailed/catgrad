@@ -1,5 +1,5 @@
 import ast
-from typing import Any, List, Tuple, Callable
+from typing import Type, Any, List, Tuple, Callable
 
 from catgrad.signature import Operation, Dtype, NdArrayType, obj
 import catgrad.operations as ops
@@ -21,9 +21,9 @@ def load(i: int):
 def store(i: int):
     return ast.Name(name_id(i), ctx=ast.Store())
 
-def expr(fn: Callable[Apply, ast.Expr]) -> Callable[[Apply, List[ast.Name]], List[ast.Assign]]:
+def expr(fn: Callable[[Apply, List[ast.Name]], ast.expr]) -> Callable[[Apply], List[ast.Assign]]:
     """ A decorator to turn a function of type
-    ``Apply → ast.Expr``
+    ``Apply → ast.expr``
     into one of type
     ``Apply → List[ast.Assign]``
     """
@@ -41,8 +41,8 @@ def expr(fn: Callable[Apply, ast.Expr]) -> Callable[[Apply, List[ast.Name]], Lis
 
     return expr_wrapper
 
-def binop(b: ast.BinOp) -> Callable[Apply, List[ast.Assign]]:
-    def binop_wrapper(a: Apply, args: List[ast.Name]) -> ast.Expr:
+def binop(b) -> Callable[[Apply], List[ast.Assign]]:
+    def binop_wrapper(a: Apply, args: List[ast.Name]) -> ast.expr:
         assert len(args) == 2
         return ast.BinOp(left=args[0], op=b, right=args[1])
     return expr(binop_wrapper)
@@ -57,10 +57,10 @@ def _call_backend(method: str, args) -> ast.Call:
         args=args, keywords=[])
 
 ################################################################################
-# Expression handlers: functions turning Operations into python ast.Expr nodes.
+# Expression handlers: functions turning Operations into python ast.expr nodes.
 
 @expr
-def copy(a: Apply, args: List[ast.Name]) -> ast.Expr:
+def copy(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.Copy
     assert len(args) == 1
     return ast.Tuple(elts=args*len(a.target), ctx=ast.Load())
@@ -103,7 +103,7 @@ def transpose(a: Apply, args: List[ast.Name]) -> ast.Call:
 
 # Handlers for each operation
 # Each function here takes an Assignment ....
-OP_HANDLERS: dict[Operation, Callable[Apply, List[ast.Assign]]] = {
+OP_HANDLERS: dict[Type[Operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Copy: copy,
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
@@ -120,14 +120,15 @@ OP_HANDLERS: dict[Operation, Callable[Apply, List[ast.Assign]]] = {
 def _mk_arguments(names: List[ast.Name]):
     return ast.arguments(args=[ ast.arg(n) for n in names ], posonlyargs=[], kwonlyargs=[], kw_defaults=[], defaults=[])
 
-def _mk_module(name: str, body: List[ast.FunctionDef]) -> ast.Module:
+def _mk_module(name: str, fn_defs: List[ast.FunctionDef]) -> ast.Module:
     _assert_identifier(name)
     backend_assign = ast.AnnAssign(
         target=ast.Name(id='backend', ctx=ast.Store()),
         annotation=ast.Name(id='ArrayBackend', ctx=ast.Load()),
         simple=1)
 
-    body = [backend_assign] + body
+    body = [backend_assign] + fn_defs
+
     dc_import = ast.ImportFrom(module='dataclasses', names=[ast.alias(name='dataclass')], level=0)
     cg_import = ast.ImportFrom(module='catgrad.signature', names=[ast.alias(name='Dtype')], level=0)
     ab_import = ast.ImportFrom(module='catgrad.target.python.array_backend', names=[ast.alias(name='ArrayBackend')], level=0)
@@ -166,7 +167,7 @@ def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
         fn_defs.append(_mk_function_definition(f, name))
     mod_ast = _mk_module(class_name, fn_defs)
     ast.fix_missing_locations(mod_ast)
-    env = {}
+    env: Any = {}
     exec(compile(mod_ast, filename='<string>', mode='exec'), env)
     return env[class_name]
 

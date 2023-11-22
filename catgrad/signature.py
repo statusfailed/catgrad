@@ -52,7 +52,7 @@ class NdArrayType:
 
         return NdArrayType(x.shape + y.shape, x.dtype)
 
-def obj(*args: List[NdArrayType]) -> FiniteFunction:
+def obj(*args) -> FiniteFunction:
     """ Create an object of the category (a FiniteFunction ``X → Σ₀``) from a
     list of ``NdArrayType`` """
     table = FiniteFunction.Array.array(args, OBJ_DTYPE)
@@ -70,5 +70,5 @@ class Operation(ABC):
 
 # Turn a single operation into an OpenHypergraph
 def op(x: Operation, A: FiniteFunction, B: FiniteFunction):
-    x = FiniteFunction(None, FiniteFunction.Array.array([x], 'O'))
-    return OpenHypergraph.singleton(x, A, B)
+    f = FiniteFunction(None, FiniteFunction.Array.array([x], 'O'))
+    return OpenHypergraph.singleton(f, A, B)

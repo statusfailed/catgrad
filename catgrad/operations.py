@@ -14,7 +14,7 @@ def prod(xs):
 # Cartesian Left-Additive Structure
 
 @dataclass
-class Copy:
+class Copy(Operation):
     T: NdArrayType
 
     @property
@@ -22,7 +22,7 @@ class Copy:
         return op(self, obj(self.T), obj(self.T, self.T))
 
 @dataclass
-class Discard:
+class Discard(Operation):
     T: NdArrayType
 
     @property
@@ -30,7 +30,7 @@ class Discard:
         return op(self, obj(self.T), obj())
 
 @dataclass
-class Add:
+class Add(Operation):
     T: NdArrayType
 
     @property
@@ -38,7 +38,7 @@ class Add:
         return op(self, obj(self.T, self.T), obj(self.T))
 
 @dataclass
-class Constant:
+class Constant(Operation):
     T: NdArrayType
     x: Any # will be cast to T.dtype
 
@@ -54,7 +54,7 @@ class Constant:
 # Isomorphisms
 
 @dataclass
-class Reshape:
+class Reshape(Operation):
     X: NdArrayType
     Y: NdArrayType
 
@@ -69,7 +69,7 @@ class Reshape:
 
 # TODO: Replace this with explicit swap two axes rather than reversing all of them.
 @dataclass
-class Transpose:
+class Transpose(Operation):
     """ Reverse the dimensions of a tensor """
     T: NdArrayType
 
@@ -85,7 +85,7 @@ class Transpose:
 # Cartesian Distributive Structure
 
 @dataclass
-class Multiply:
+class Multiply(Operation):
     T: NdArrayType
 
     @property
@@ -96,7 +96,7 @@ class Multiply:
 # Matrix multiplication
 
 @dataclass
-class Compose:
+class Compose(Operation):
     """ Composition of tensors ``f : A → B`` and ``g : B → C`` along ``B``, so
     that ``Compose(f, g) : A → C``
     """

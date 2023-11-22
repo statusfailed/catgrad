@@ -29,6 +29,7 @@ class FunctionDefinition:
     body: List[Apply]
     returns: List[int]
 
+    @staticmethod
     def from_open_hypergraph(f: OpenHypergraph):
         # Decompose an open hypergraph.
         # First permute into an order which guarantees that x(i) precedes x(i) for i < j.
