@@ -1,7 +1,7 @@
 import ast
 from typing import Type, Any, List, Tuple, Callable
 
-from catgrad.signature import Operation, Dtype, NdArrayType, obj
+from catgrad.signature import Dtype, NdArrayType, obj
 import catgrad.operations as ops
 from catgrad.target.ast import *
 
@@ -57,7 +57,7 @@ def _call_backend(method: str, args) -> ast.Call:
         args=args, keywords=[])
 
 ################################################################################
-# Expression handlers: functions turning Operations into python ast.expr nodes.
+# Expression handlers: functions turning operations into python ast.expr nodes.
 
 @expr
 def copy(a: Apply, args: List[ast.Name]) -> ast.expr:
@@ -70,6 +70,18 @@ def discard(a: Apply) -> List[ast.Assign]:
     assert len(a.rhs) == 1
     # Discarding produces no assignment statements.
     return []
+
+@expr
+def ncopy(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.NCopy
+    assert len(args) == 1
+    return _call_backend('ncopy', [ast.Constant(value=a.op.N.shape), args[0]])
+
+@expr
+def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.NAdd
+    assert len(args) == 1
+    return _call_backend('nadd', [ast.Constant(value=a.op.N.shape), args[0]])
 
 @expr
 def constant(a: Apply, args: List[ast.Name]) -> ast.Call:
@@ -103,10 +115,12 @@ def transpose(a: Apply, args: List[ast.Name]) -> ast.Call:
 
 # Handlers for each operation
 # Each function here takes an Assignment ....
-OP_HANDLERS: dict[Type[Operation], Callable[[Apply], List[ast.Assign]]] = {
+OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Copy: copy,
+    ops.NCopy: ncopy,
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
+    ops.NAdd: nadd,
     ops.Multiply: binop(ast.Mult()),
     ops.Constant: constant,
     ops.Compose: compose, # binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
@@ -161,14 +175,17 @@ def _mk_function_definition(f: OpenHypergraph, name: str = 'fn', op_handlers=OP_
         type_params=[])
 
 def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
-    fn_defs = []
+    filename='<string>'
+    fn_defs = {}
     for name, f in fs.items():
         _assert_identifier(name)
-        fn_defs.append(_mk_function_definition(f, name))
-    mod_ast = _mk_module(class_name, fn_defs)
+        fn_defs[name] = _mk_function_definition(f, name)
+    mod_ast = _mk_module(class_name, list(fn_defs.values()))
     ast.fix_missing_locations(mod_ast)
     env: Any = {}
-    exec(compile(mod_ast, filename='<string>', mode='exec'), env)
+    exec(compile(mod_ast, filename=filename, mode='exec'), env)
+
+    # TODO: make tracebacks work properly for generated member functions.
     return env[class_name]
 
 def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>') -> Callable:

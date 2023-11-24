@@ -59,16 +59,18 @@ def obj(*args) -> FiniteFunction:
     return FiniteFunction(None, table)
 
 ################################################################################
-# Operations
-
-class Operation(ABC):
-    # TODO: replace this with source/target?
-    @property
-    @abstractmethod
-    def op(self) -> OpenHypergraph:
-        ...
+# TODO?
 
 # Turn a single operation into an OpenHypergraph
-def op(x: Operation, A: FiniteFunction, B: FiniteFunction):
+def singleton(x: Any, A: FiniteFunction, B: FiniteFunction):
     f = FiniteFunction(None, FiniteFunction.Array.array([x], 'O'))
     return OpenHypergraph.singleton(f, A, B)
+
+class Typed(Protocol):
+    def source(self) -> FiniteFunction:
+        ...
+    def target(self) -> FiniteFunction:
+        ...
+
+def op(x: Typed):
+    return singleton(x, x.source(), x.target())

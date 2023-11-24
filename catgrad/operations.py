@@ -2,7 +2,7 @@ from typing import Any
 from dataclasses import dataclass
 from open_hypergraphs import OpenHypergraph
 
-from catgrad.signature import NdArrayType, obj, op, Operation
+from catgrad.signature import NdArrayType, obj, op
 
 def prod(xs):
     a = 1
@@ -14,89 +14,94 @@ def prod(xs):
 # Cartesian Left-Additive Structure
 
 @dataclass
-class Copy(Operation):
+class Copy:
     T: NdArrayType
-
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.T), obj(self.T, self.T))
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T, self.T)
 
 @dataclass
-class Discard(Operation):
+class NCopy:
+    # TODO: introduce split/join and mention naturality of Broadcast w.r.t. them.
+    """ NCopy is like Copy, but on tensor dimensions.
+    ``NCopy(N,A) : A → N+A`` is like the N-fold copy of a tensor of shape A, then packed into a tensor.
+    """
+    N: NdArrayType
     T: NdArrayType
-
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.T), obj())
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.N + self.T)
 
 @dataclass
-class Add(Operation):
+class Discard:
     T: NdArrayType
-
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.T, self.T), obj(self.T))
+    def source(self): return obj(self.T)
+    def target(self): return obj()
 
 @dataclass
-class Constant(Operation):
+class Add:
     T: NdArrayType
-    x: Any # will be cast to T.dtype
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
+
+@dataclass
+class NAdd:
+    """ ``NAdd(N, T)`` sums a tensor of type N + T over the N dimensions. """
+    N: NdArrayType
+    T: NdArrayType
+    def source(self): return obj(self.N + self.T)
+    def target(self): return obj(self.T)
+
+scalar = int | float
+@dataclass
+class Constant:
+    T: NdArrayType
+    x: scalar # will be cast to T.dtype
+
+    def source(self): return obj()
+    def target(self): return obj(self.T)
 
     def __post_init__(self):
         if self.T.shape != ():
             raise ValueError(f"Constant.T.shape must be () but was {self.T.dtype}")
 
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(), obj(self.T))
-
 ################################################################################
 # Isomorphisms
 
 @dataclass
-class Reshape(Operation):
+class Reshape:
     X: NdArrayType
     Y: NdArrayType
+
+    def source(self): return obj(self.X)
+    def target(self): return obj(self.Y)
 
     def __post_init__(self):
         # input and output must have same number of entries
         if prod(self.X.shape) != prod(self.Y.shape):
             raise ValueError("Must have prod(X) == prod(Y)")
 
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.X), obj(self.Y))
-
 # TODO: Replace this with explicit swap two axes rather than reversing all of them.
 @dataclass
-class Transpose(Operation):
+class Transpose:
     """ Reverse the dimensions of a tensor """
     T: NdArrayType
-
-    @property
+    def source(self): return obj(self.T)
     def target(self):
-        return NdArrayType(tuple(reversed(self.T.shape)), self.T.dtype)
-
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.T), obj(self.target))
+        return obj(NdArrayType(tuple(reversed(self.T.shape)), self.T.dtype))
 
 ################################################################################
 # Cartesian Distributive Structure
 
 @dataclass
-class Multiply(Operation):
+class Multiply:
     T: NdArrayType
-
-    @property
-    def op(self) -> OpenHypergraph:
-        return op(self, obj(self.T, self.T), obj(self.T))
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
 
 ################################################################################
 # Matrix multiplication
 
 @dataclass
-class Compose(Operation):
+class Compose:
     """ Composition of tensors ``f : A → B`` and ``g : B → C`` along ``B``, so
     that ``Compose(f, g) : A → C``
     """
@@ -104,9 +109,10 @@ class Compose(Operation):
     B: NdArrayType
     C: NdArrayType
 
-    @property
-    def op(self) -> OpenHypergraph:
-        A, B, C = self.A, self.B, self.C
-        S = obj(A+B, B+C)
-        T = obj(A+C)
-        return op(self, S, T)
+    def source(self): return obj(self.A+self.B, self.B+self.C)
+    def target(self): return obj(self.A+self.C)
+
+################################################################################
+# All the array operations in a union type
+
+operation = Copy | NCopy | Discard | Add | NAdd | Constant | Reshape | Transpose | Multiply | Compose

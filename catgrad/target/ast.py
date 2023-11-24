@@ -7,14 +7,14 @@ from dataclasses import dataclass
 
 from open_hypergraphs import FiniteFunction, OpenHypergraph
 from open_hypergraphs.numpy import layer
-from catgrad.signature import Operation
+from catgrad.operations import operation
 
-# An `Apply` represents the application of some Operation to arguments lhs and rhs.
+# An `Apply` represents the application of some operation to arguments lhs and rhs.
 @dataclass
 class Apply:
     """ The application of an operation of a given type to some arguments (lhs)
     producing some return values (lhs) """
-    op: Operation # the operation itself
+    op: operation # the operation itself
     source: FiniteFunction # source type
     target: FiniteFunction # target type
     lhs: List[int] # outputs of the operation
@@ -42,18 +42,18 @@ class FunctionDefinition:
             raise ValueError("Cannot create a function from an OpenHypergraph with cycles")
         # now use argsort to generate a permutation, so "parallel" ops are
         # assigned different values.
-        x = x.argsort()
+        p: FiniteFunction = x.argsort()
 
         # apply permutation to f
-        f = f.permute(w, x)
+        g: OpenHypergraph = f.permute(w, p)
 
         # Build the FunctionDefinition
         body = [
             Apply(op=op, source=src, target=tgt, lhs=lhs.table, rhs=rhs.table)
             for op, src, tgt, rhs, lhs
-            in zip(f.H.x.table, f.H.s.map_values(f.H.w), f.H.t.map_values(f.H.w), f.H.s, f.H.t)
+            in zip(g.H.x.table, g.H.s.map_values(g.H.w), g.H.t.map_values(g.H.w), g.H.s, g.H.t)
         ]
         return FunctionDefinition(
-            args=f.s.table,
+            args=g.s.table,
             body=body,
-            returns=f.t.table)
+            returns=g.t.table)

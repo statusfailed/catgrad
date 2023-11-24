@@ -38,6 +38,14 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
+    def ncopy(shape: Tuple, x: A) -> A:
+        ...
+
+    @staticmethod
+    def nadd(shape: Tuple, x: A) -> A:
+        ...
+
+    @staticmethod
     def reshape(x: A, shape: Tuple) -> A:
         ...
 
@@ -61,6 +69,14 @@ class Numpy:
     @staticmethod
     def constant(x: Any, dtype: signature.Dtype) -> np.ndarray:
         return np.array(x, dtype=Numpy.dtype(dtype))
+
+    @staticmethod
+    def ncopy(shape: Tuple, x: np.ndarray) -> np.ndarray:
+        return np.broadcast_to(x, (*shape, *x.shape))
+
+    @staticmethod
+    def nadd(shape: Tuple, x: np.ndarray) -> np.ndarray:
+        return x.sum(tuple(range(len(shape))))
 
     @staticmethod
     def reshape(x: np.ndarray, shape: Tuple) -> np.ndarray:
