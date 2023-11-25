@@ -1,4 +1,4 @@
-from typing import Protocol, TypeVar, Type, Any, Tuple
+from typing import Protocol, TypeVar, Type, Any, List, Tuple
 import numpy as np
 
 from catgrad import signature
@@ -50,7 +50,7 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
-    def transpose(x: A):
+    def permute(x: A, p: List[int]):
         ...
 
     @staticmethod
@@ -83,8 +83,8 @@ class Numpy:
         return np.reshape(x, shape)
 
     @staticmethod
-    def transpose(x: np.ndarray):
-        return np.transpose(x)
+    def permute(x: np.ndarray, p: List[int]):
+        return np.transpose(x, p)
 
     @staticmethod
     def compose(x: np.ndarray, y: np.ndarray, axes: int) -> np.ndarray:

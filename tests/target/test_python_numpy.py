@@ -1,10 +1,11 @@
 """ Test that the Python backend behaves as expected """
 import pytest
 import numpy as np
-from typing import List
+from typing import List, Tuple
 from hypothesis import given
 from hypothesis import strategies as st
 from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
+import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType
 from catgrad.target.python import to_python_function
@@ -91,5 +92,15 @@ def test_reshape(XYx):
 @given(ndarrays())
 def test_transpose(Tx):
     T, [x] = Tx
-    f = to_python_function(op(Transpose(T)))
+    p = list(reversed(range(len(T.shape))))
+    f = to_python_function(op(Permute(T, p)))
     _assert_equal(f(x), [x.transpose()])
+
+@given(strategies.permute().flatmap(lambda op: st.tuples(st.just(op), ndarrays(array_type=st.just(op.T)))))
+def test_permute(p_x: Tuple[Permute, np.ndarray]):
+    p, (_, [x]) = p_x
+    f = to_python_function(op(p))
+
+    actual = f(x)
+    expected = [x.transpose(p.p)]
+    _assert_equal(actual, expected)

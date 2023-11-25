@@ -108,10 +108,12 @@ def reshape(a: Apply, args: List[ast.Name]) -> ast.Call:
     return _call_backend('reshape', [ args[0], ast.Constant(value=a.op.Y.shape) ])
 
 @expr
-def transpose(a: Apply, args: List[ast.Name]) -> ast.Call:
-    assert type(a.op) == ops.Transpose
+def permute(a: Apply, args: List[ast.Name]) -> ast.Call:
+    assert type(a.op) == ops.Permute
     assert len(args) == 1
-    return _call_backend('transpose', [ args[0] ])
+    # permutation array as a constant expression
+    p_arg = ast.List(elts=[ast.Constant(i, ctx=ast.Load()) for i in a.op.p], ctx=ast.Load())
+    return _call_backend('permute', [ args[0], p_arg ])
 
 # Handlers for each operation
 # Each function here takes an Assignment ....
@@ -125,7 +127,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Constant: constant,
     ops.Compose: compose, # binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
     ops.Reshape: reshape,
-    ops.Transpose: transpose,
+    ops.Permute: permute,
 }
 
 ################################################################################

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 from dataclasses import dataclass
 from open_hypergraphs import OpenHypergraph
 
@@ -83,12 +83,21 @@ class Reshape:
 
 # TODO: Replace this with explicit swap two axes rather than reversing all of them.
 @dataclass
-class Transpose:
-    """ Reverse the dimensions of a tensor """
+class Permute:
+    """ Permute the dimensions of a tensor """
     T: NdArrayType
+    p: List[int]
+
+    def __post_init__(self):
+        k = len(self.T.shape)
+        if list(sorted(self.p)) != list(range(k)):
+            raise ValueError(f"p must be a permutation of type {k} → {k}")
+
     def source(self): return obj(self.T)
     def target(self):
-        return obj(NdArrayType(tuple(reversed(self.T.shape)), self.T.dtype))
+        U_shape = tuple(self.T.shape[i] for i in self.p)
+        U = NdArrayType(U_shape, self.T.dtype)
+        return obj(U)
 
 ################################################################################
 # Cartesian Distributive Structure
@@ -117,4 +126,4 @@ class Compose:
 ################################################################################
 # All the array operations in a union type
 
-operation = Copy | NCopy | Discard | Add | NAdd | Constant | Reshape | Transpose | Multiply | Compose
+operation = Copy | NCopy | Discard | Add | NAdd | Constant | Reshape | Permute | Multiply | Compose

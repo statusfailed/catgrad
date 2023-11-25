@@ -1,12 +1,14 @@
 import math
 import operator
 from functools import reduce
+from typing import List
 
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays
 
 from catgrad.signature import Dtype, NdArrayType
 from catgrad.target.python.array_backend import Numpy
+import catgrad.operations as ops
 
 dtypes = st.sampled_from(Dtype)
 
@@ -67,3 +69,19 @@ def ncopy_args(draw):
     T, [x] = draw(ndarrays(array_type=ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt))))
     N = draw(ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt)))
     return (T, [x]), N
+
+################################################################################
+# generators for ops
+
+@st.composite
+def permutations(draw, n) -> List[int]:
+    if type(n) != int:
+        n = draw(n)
+    x = draw(arrays(shape=(n,), dtype=int))
+    return x.argsort().tolist() # NOTE: probably not uniform
+
+@st.composite
+def permute(draw):
+    T = draw(ndarraytypes())
+    p = draw(permutations(n=st.just(len(T.shape))))
+    return ops.Permute(T, p)

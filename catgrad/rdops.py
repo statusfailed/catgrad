@@ -1,3 +1,4 @@
+import numpy as np
 from dataclasses import dataclass
 from abc import abstractmethod
 from open_hypergraphs import OpenHypergraph, FiniteFunction, IndexedCoproduct, FrobeniusFunctor
@@ -94,12 +95,12 @@ class Constant(ops.Constant, Dagger):
     def dagger(self): return op(Discard(self.T))
 
 class Reshape(ops.Reshape, Dagger):
-    def arrow(self): return op(ops.Reshape(self.T))
+    def arrow(self): return op(ops.Reshape(self.X, self.Y))
     def dagger(self): return op(Reshape(self.Y, self.X))
 
-class Transpose(ops.Transpose, Dagger):
-    def arrow(self): return op(ops.Transpose(self.T))
-    def dagger(self): return op(Transpose(self.T))
+class Permute(ops.Permute, Dagger):
+    def arrow(self): return op(ops.Permute(self.T, self.p))
+    def dagger(self): return op(Permute(self.T, np.argsort(self.p).tolist()))
 
 class Multiply(ops.Multiply, Lens):
     def arrow(self): return op(ops.Multiply(self.T))
@@ -115,7 +116,10 @@ class Compose(ops.Compose, Lens):
     def arrow(self): return op(ops.Compose(self.A, self.B, self.C))
     def rev(self):
         A, B, C = self.A, self.B, self.C
-        lhs = op(Transpose(A, B)) @ op(Transpose(B, C)) @ identity(A + C)
+        t_AB = FiniteFunction.twist(len(B.shape), len(A.shape)).table.tolist()
+        t_BC = FiniteFunction.twist(len(C.shape), len(B.shape)).table.tolist()
+
+        lhs = op(Permute(A+B, t_AB)) @ op(Permute(B+C, t_BC)) @ copy(obj(A + C))
         p = permutation(lhs.target, [2, 1, 0, 3])
         rhs = op(Compose(A, C, B)) @ op(Compose(B, A, C))
         return lhs >> p >> rhs
