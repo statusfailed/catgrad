@@ -56,12 +56,14 @@ class Constant:
     T: NdArrayType
     x: scalar # will be cast to T.dtype
 
-    def source(self): return obj()
-    def target(self): return obj(self.T)
-
     def __post_init__(self):
+        if not isinstance(self.x, scalar):
+            raise ValueError(f"constant {self.x} is not a scalar {scalar}")
         if self.T.shape != ():
             raise ValueError(f"Constant.T.shape must be () but was {self.T.dtype}")
+
+    def source(self): return obj()
+    def target(self): return obj(self.T)
 
 ################################################################################
 # Isomorphisms

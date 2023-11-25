@@ -4,7 +4,7 @@ import numpy as np
 from typing import List
 from hypothesis import given
 from hypothesis import strategies as st
-from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args
+from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
 
 from catgrad.signature import NdArrayType
 from catgrad.target.python import to_python_function
@@ -21,10 +21,7 @@ def test_copy(Tx: np.ndarray):
     f = to_python_function(op(Copy(T)))
     _assert_equal(f(x), [x, x])
 
-@given(dtypes.flatmap(lambda dt: st.tuples(
-    ndarrays(array_type=ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt))),
-    ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt))
-)))
+@given(ncopy_args())
 def test_ncopy(TxN):
     (T, [x]), N = TxN
     f = to_python_function(op(NCopy(N, T)))

@@ -60,3 +60,10 @@ def reshape_args(draw):
 
     _, [x] = draw(ndarrays(array_type=st.just(T0), n=1))
     return T0, T1, x
+
+@st.composite
+def ncopy_args(draw):
+    dt = draw(dtypes)
+    T, [x] = draw(ndarrays(array_type=ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt))))
+    N = draw(ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt)))
+    return (T, [x]), N

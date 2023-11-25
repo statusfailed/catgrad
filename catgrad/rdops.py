@@ -39,8 +39,8 @@ class Optic:
 class Lens(Optic):
     """ Lenses are optics whose forward map has the form ``Δ ; (f × id)`` """
     def fwd(self) -> OpenHypergraph:
-        raise NotImplementedError("TODO")
-        # return copy >> (op(self) @ identity(A))
+        A = self.source()
+        return copy(A) >> (op(self) @ identity(A))
 
     def residual(self) -> FiniteFunction:
         return self.source()
@@ -67,6 +67,8 @@ class Dagger(Optic):
 class Copy(ops.Copy, Dagger):
     def arrow(self): return op(ops.Copy(self.T))
     def dagger(self): return op(Add(self.T))
+
+copy = canonical(lambda T: op(Copy(T)))
 
 class NCopy(ops.NCopy, Dagger):
     def arrow(self): return op(ops.NCopy(self.N, self.T))
@@ -102,15 +104,15 @@ class Transpose(ops.Transpose, Dagger):
 class Multiply(ops.Multiply, Lens):
     def arrow(self): return op(ops.Multiply(self.T))
     def rev(self):
-        T = self.T
-        mul = self.op
-        lhs = (twist(T, T) @ Copy(T).op)
+        T = obj(self.T)
+        mul = op(self)
+        lhs = (twist(T, T) @ copy(T))
         mid = (identity(T) @ twist(T, T) @ identity(T))
         rhs = mul @ mul
         return lhs >> mid >> rhs
 
 class Compose(ops.Compose, Lens):
-    def arrow(self): return op(ops.Multiply(self.T))
+    def arrow(self): return op(ops.Compose(self.A, self.B, self.C))
     def rev(self):
         A, B, C = self.A, self.B, self.C
         lhs = op(Transpose(A, B)) @ op(Transpose(B, C)) @ identity(A + C)
