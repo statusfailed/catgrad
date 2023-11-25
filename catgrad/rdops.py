@@ -87,7 +87,7 @@ class Add(ops.Add, Dagger):
     def dagger(self): return op(Copy(self.T))
 
 class NAdd(ops.NAdd, Dagger):
-    def arrow(self): return op(ops.NAdd(self.T))
+    def arrow(self): return op(ops.NAdd(self.N, self.T))
     def dagger(self): return op(NCopy(self.N, self.T))
 
 class Constant(ops.Constant, Dagger):
