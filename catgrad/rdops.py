@@ -69,8 +69,6 @@ class Copy(ops.Copy, Dagger):
     def arrow(self): return op(ops.Copy(self.T))
     def dagger(self): return op(Add(self.T))
 
-copy = canonical(lambda T: op(Copy(T)))
-
 class NCopy(ops.NCopy, Dagger):
     def arrow(self): return op(ops.NCopy(self.N, self.T))
     def dagger(self): return op(NAdd(self.N, self.T))
@@ -123,6 +121,30 @@ class Compose(ops.Compose, Lens):
         p = permutation(lhs.target, [2, 1, 0, 3])
         rhs = op(Compose(A, C, B)) @ op(Compose(B, A, C))
         return lhs >> p >> rhs
+
+################################################################################
+# Canonical combinators
+
+def full1(c: ops.scalar):
+    """ ``full1(c)`` returns a function f(T: NdArrayType) which constructs a
+    circuit of type ``I → T`` representing the constant array of type T filled
+    with values ``c``. """
+    def full1_wrapped(T: NdArrayType):
+        U = NdArrayType((), T.dtype)
+        a = op(Constant(U, c))
+        b = op(NCopy(T, U))
+        return a >> b
+    return full1_wrapped
+
+copy = canonical(lambda T: op(Copy(T)))
+discard = canonical(lambda T: op(Discard(T)))
+
+add  = canonical(lambda T: op(Add(T)))
+zero = canonical(full1(0))
+
+multiply = canonical(lambda T: op(Multiply(T)))
+# could also call this "full".
+constant = lambda c: canonical(full1(c))
 
 ################################################################################
 

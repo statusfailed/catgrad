@@ -4,6 +4,8 @@ import numpy as np
 from typing import List, Tuple
 from hypothesis import given
 from hypothesis import strategies as st
+
+from tests.utils import assert_equal
 from tests.strategies import ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
 import tests.strategies as strategies
 
@@ -13,11 +15,6 @@ from catgrad.target.python.array_backend import Numpy
 from catgrad.rdops import *
 
 F = Forget()
-
-def _assert_equal(xs: List[np.ndarray], ys: List[np.ndarray]):
-    assert len(xs) == len(ys)
-    for x, y in zip(xs, ys):
-        assert np.array_equal(x, y, equal_nan=True)
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -31,9 +28,9 @@ def test_rd_copy(Tx: np.ndarray):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(x), [x, x])
-    _assert_equal(fwd(x), [x, x])
-    _assert_equal(rev(x, y), [x + y])
+    assert_equal(arrow(x), [x, x])
+    assert_equal(fwd(x), [x, x])
+    assert_equal(rev(x, y), [x + y])
 
 @given(ncopy_args())
 def test_rd_ncopy(TxN):
@@ -47,9 +44,9 @@ def test_rd_ncopy(TxN):
     dy = np.ones((N+T).shape) # TODO: generate
     expected_y = np.broadcast_to(x, (N+T).shape)
 
-    _assert_equal(arrow(x), [expected_y])
-    _assert_equal(fwd(x), [expected_y])
-    _assert_equal(rev(dy), [Numpy.nadd(N.shape, dy)])
+    assert_equal(arrow(x), [expected_y])
+    assert_equal(fwd(x), [expected_y])
+    assert_equal(rev(dy), [Numpy.nadd(N.shape, dy)])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -63,9 +60,9 @@ def test_rd_discard(Tx: np.ndarray):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(x), [])
-    _assert_equal(fwd(x), [])
-    _assert_equal(rev(), [np.zeros(T.shape, Numpy.dtype(T.dtype))])
+    assert_equal(arrow(x), [])
+    assert_equal(fwd(x), [])
+    assert_equal(rev(), [np.zeros(T.shape, Numpy.dtype(T.dtype))])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -80,9 +77,9 @@ def test_rd_add(Tx):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(x0, x1), [x0 + x1])
-    _assert_equal(fwd(x0, x1), [x0 + x1])
-    _assert_equal(rev(y), [y, y])
+    assert_equal(arrow(x0, x1), [x0 + x1])
+    assert_equal(fwd(x0, x1), [x0 + x1])
+    assert_equal(rev(y), [y, y])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -101,9 +98,9 @@ def test_rd_nadd(Tx: np.ndarray):
     dy = np.ones((T).shape) # TODO: generate
     expected_y = Numpy.nadd(N.shape, x)
 
-    _assert_equal(arrow(x), [expected_y])
-    _assert_equal(fwd(x), [expected_y])
-    _assert_equal(rev(dy), [Numpy.ncopy(N.shape, dy)])
+    assert_equal(arrow(x), [expected_y])
+    assert_equal(fwd(x), [expected_y])
+    assert_equal(rev(dy), [Numpy.ncopy(N.shape, dy)])
 
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_rd_constant(Tx: np.ndarray):
@@ -116,9 +113,9 @@ def test_rd_constant(Tx: np.ndarray):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(), [x])
-    _assert_equal(fwd(), [x])
-    _assert_equal(rev(x), [])
+    assert_equal(arrow(), [x])
+    assert_equal(fwd(), [x])
+    assert_equal(rev(x), [])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -133,9 +130,9 @@ def test_rd_multiply(Tx: np.ndarray):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(x0, x1), [x0 * x1])
-    _assert_equal(fwd(x0, x1), [x0 * x1, x0, x1]) # this one's a lens
-    _assert_equal(rev(x0, x1, y), [x1 * y, x0 * y])
+    assert_equal(arrow(x0, x1), [x0 * x1])
+    assert_equal(fwd(x0, x1), [x0 * x1, x0, x1]) # this one's a lens
+    assert_equal(rev(x0, x1, y), [x1 * y, x0 * y])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -162,9 +159,9 @@ def test_rd_compose(ABCxy: np.ndarray):
     expected_dx1 = np.tensordot(x0_dagger, dy, axes=len(A.shape))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    _assert_equal(arrow(x0, x1), [expected_y])
-    _assert_equal(fwd(x0, x1), [expected_y, x0, x1]) # this one's a lens
-    _assert_equal(rev(x0, x1, dy), [expected_dx0, expected_dx1])
+    assert_equal(arrow(x0, x1), [expected_y])
+    assert_equal(fwd(x0, x1), [expected_y, x0, x1]) # this one's a lens
+    assert_equal(rev(x0, x1, dy), [expected_dx0, expected_dx1])
 
 @given(reshape_args())
 def test_rd_reshape(XYx):
@@ -177,9 +174,9 @@ def test_rd_reshape(XYx):
 
     expected_y = x.reshape(Y.shape)
 
-    _assert_equal(arrow(x), [expected_y])
-    _assert_equal(fwd(x), [expected_y]) # this one's a lens
-    _assert_equal(rev(expected_y), [x]) # inverse
+    assert_equal(arrow(x), [expected_y])
+    assert_equal(fwd(x), [expected_y]) # this one's a lens
+    assert_equal(rev(expected_y), [x]) # inverse
 
 @given(strategies.permute().flatmap(lambda op: st.tuples(st.just(op), ndarrays(array_type=st.just(op.T)))))
 def test_rd_permute(p_x: Tuple[ops.Permute, np.ndarray]):
@@ -192,6 +189,6 @@ def test_rd_permute(p_x: Tuple[ops.Permute, np.ndarray]):
 
     expected_y = x.transpose(e.p)
 
-    _assert_equal(arrow(x), [expected_y])
-    _assert_equal(fwd(x), [expected_y]) # this one's a lens
-    _assert_equal(rev(expected_y), [x]) # inverse
+    assert_equal(arrow(x), [expected_y])
+    assert_equal(fwd(x), [expected_y]) # this one's a lens
+    assert_equal(rev(expected_y), [x]) # inverse

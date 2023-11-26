@@ -60,7 +60,7 @@ class Constant:
         if not isinstance(self.x, scalar):
             raise ValueError(f"constant {self.x} is not a scalar {scalar}")
         if self.T.shape != ():
-            raise ValueError(f"Constant.T.shape must be () but was {self.T.dtype}")
+            raise ValueError(f"Constant.T.shape must be () but was {self.T.shape}")
 
     def source(self): return obj()
     def target(self): return obj(self.T)

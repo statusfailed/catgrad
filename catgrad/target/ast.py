@@ -32,20 +32,19 @@ class FunctionDefinition:
     @staticmethod
     def from_open_hypergraph(f: OpenHypergraph):
         # Decompose an open hypergraph.
-        # First permute into an order which guarantees that x(i) precedes x(i) for i < j.
-        w = FiniteFunction.identity(f.H.W)
-
-        # Permute operations. First compute layering of ops, which may assign
+        # First compute layering of ops, which may assign
         # multiple ops to the same layer:
         x, completed = layer(f)
         if not np.all(completed):
             raise ValueError("Cannot create a function from an OpenHypergraph with cycles")
         # now use argsort to generate a permutation, so "parallel" ops are
         # assigned different values.
-        p: FiniteFunction = x.argsort()
+        # NOTE: called twice because we need the *inverse* permutation(?)
+        p: FiniteFunction = x.argsort().argsort()
 
-        # apply permutation to f
-        g: OpenHypergraph = f.permute(w, p)
+        # apply permutation to the OpenHypergraph, leaving wires unchanged.
+        w = FiniteFunction.identity(f.H.W)
+        g: OpenHypergraph = f.permute(w, p) # permute generators by p
 
         # Build the FunctionDefinition
         body = [

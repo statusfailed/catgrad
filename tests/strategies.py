@@ -1,12 +1,15 @@
 import math
 import operator
+from typing import Callable
 from functools import reduce
 from typing import List
 
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays
 
-from catgrad.signature import Dtype, NdArrayType
+from open_hypergraphs import FiniteFunction, OpenHypergraph
+
+from catgrad.signature import obj, Dtype, NdArrayType
 from catgrad.target.python.array_backend import Numpy
 import catgrad.operations as ops
 
@@ -85,3 +88,21 @@ def permute(draw):
     T = draw(ndarraytypes())
     p = draw(permutations(n=st.just(len(T.shape))))
     return ops.Permute(T, p)
+
+################################################################################
+# generators for values at given objects
+
+# many ndarrays wrapped in a FiniteFunction
+@st.composite
+def objects(draw, shape=shapes(max_elements=st.just(100)), dtype=dtypes):
+    x = draw(st.lists(ndarraytypes(shape=shape, dtype=dtype), min_size=0, max_size=5))
+    return obj(*x)
+
+@st.composite
+def objects_and_values(draw, f: Callable[FiniteFunction, OpenHypergraph]):
+    """ Draw an object X = T₀ ● ... ● Tn.
+    Construct a circuit ``c = f(X)``, and generate input data of type ``c.source``. """
+    X = draw(objects())
+    c = f(X)
+    v = [ draw(ndarrays(array_type=st.just(A_i)))[1][0] for A_i in c.source ]
+    return X, c, v

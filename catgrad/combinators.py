@@ -56,7 +56,7 @@ def canonical(component: Callable[NdArrayType, OpenHypergraph]) -> Callable[Fini
 
         # build a tensoring of all components, and wrap it in transpositions.
         f = OpenHypergraph.tensor_list(components)
-        lhs = transpose(f.source, n, arity).dagger()
+        lhs = transpose(f.source, n, arity)
         rhs = transpose(f.target, n, coarity).dagger()
         return lhs >> f >> rhs
 
