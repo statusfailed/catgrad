@@ -36,6 +36,8 @@ def test_bidirectional_zero(A: FiniteFunction):
     actual = f(*args)
     assert_equal(expected, actual)
 
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
 @given(strategies.objects_and_values(add))
 def test_bidirectional_add(Xcv):
     X, c, v = Xcv
@@ -74,3 +76,5 @@ def test_bidirectional_copy(Xcv):
     expected = fwd_expected + rev_expected
     actual = f(*args, *dy)
     assert_equal(expected, actual)
+
+# TODO: test more complex diagrams + their expected reverse derivatives.

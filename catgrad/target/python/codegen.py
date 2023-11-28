@@ -4,6 +4,7 @@ from typing import Type, Any, List, Tuple, Callable
 from catgrad.signature import Dtype, NdArrayType, obj
 import catgrad.operations as ops
 from catgrad.target.ast import *
+from catgrad.target.python.array_backend import Numpy
 
 ################################################################################
 # Helpers
@@ -190,11 +191,10 @@ def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
     # TODO: make tracebacks work properly for generated member functions.
     return env[class_name]
 
-def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>') -> Callable:
+def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>', array_backend=Numpy) -> Callable:
     # compile to a class
     Dynamic = to_python_class({function_name: f}, 'Dynamic')
 
     # instantiate with numpy array backend and return closure over class
-    from catgrad.target.python.array_backend import Numpy
     d = Dynamic(Numpy)
     return (lambda *args: d.fn(*args))

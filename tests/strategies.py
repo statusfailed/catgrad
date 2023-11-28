@@ -39,12 +39,17 @@ def ndarrays(draw, array_type=ndarraytypes(), n=1):
     return t, xs
 
 @st.composite
-def composable_ndarrays(draw):
-    # we have to make pretty small arrays to fit in the test deadline
+def composable_ndarraytypes(draw):
     shape = shapes(max_elements=st.just(500))
     A = draw(ndarraytypes(shape=shape))
     B = draw(ndarraytypes(dtype=st.just(A.dtype), shape=shape))
     C = draw(ndarraytypes(dtype=st.just(A.dtype), shape=shape))
+    return A, B, C
+
+@st.composite
+def composable_ndarrays(draw):
+    # we have to make pretty small arrays to fit in the test deadline
+    A, B, C = draw(composable_ndarraytypes)
 
     _, [x] = draw(ndarrays(array_type=st.just(A+B), n=1))
     _, [y] = draw(ndarrays(array_type=st.just(B+C), n=1))
