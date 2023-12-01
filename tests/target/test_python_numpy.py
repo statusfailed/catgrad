@@ -72,6 +72,35 @@ def test_multiply(Tx: np.ndarray):
     f = to_python_function(op(Multiply(T)))
     assert_equal(f(x, y), [x * y])
 
+# >:(   np.abs(-MAXINT) = -MAXINT
+def true_abs(x):
+    x = np.abs(x)
+    return np.where(x < 0, -(x+1), x)
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2))
+def test_power(Tx: np.ndarray):
+    T, [x, y] = Tx
+    # take abs of exponents; consider other values undefined.
+    y = true_abs(y)
+    f = to_python_function(op(Power(T)))
+    assert_equal(f(x, y), [x ** y])
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@pytest.mark.filterwarnings("ignore:divide by zero")
+@given(ndarrays(n=2))
+def test_divide(Tx: np.ndarray):
+    T, [x, y] = Tx
+    f = to_python_function(op(Divide(T)))
+    if T.dtype.is_floating():
+        expected = x / y
+    else:
+        expected = x // y
+    assert_equal(f(x, y), [expected])
+
+
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
 @given(composable_ndarrays())

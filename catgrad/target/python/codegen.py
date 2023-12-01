@@ -85,6 +85,13 @@ def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     return _call_backend('nadd', [ast.Constant(value=a.op.N.shape), args[0]])
 
 @expr
+def divide(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.Divide
+    assert len(args) == 2
+    b = ast.Div() if a.op.T.dtype.is_floating() else ast.FloorDiv()
+    return ast.BinOp(left=args[0], op=b, right=args[1])
+
+@expr
 def constant(a: Apply, args: List[ast.Name]) -> ast.Call:
     assert type(a.op) == ops.Constant
     assert len(args) == 0
@@ -125,6 +132,8 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,
     ops.Multiply: binop(ast.Mult()),
+    ops.Divide: divide,
+    ops.Power: binop(ast.Pow()),
     ops.Constant: constant,
     ops.Compose: compose, # binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
     ops.Reshape: reshape,

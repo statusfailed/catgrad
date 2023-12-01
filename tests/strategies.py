@@ -49,7 +49,7 @@ def composable_ndarraytypes(draw):
 @st.composite
 def composable_ndarrays(draw):
     # we have to make pretty small arrays to fit in the test deadline
-    A, B, C = draw(composable_ndarraytypes)
+    A, B, C = draw(composable_ndarraytypes())
 
     _, [x] = draw(ndarrays(array_type=st.just(A+B), n=1))
     _, [y] = draw(ndarrays(array_type=st.just(B+C), n=1))

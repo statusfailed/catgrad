@@ -1,4 +1,5 @@
 from typing import Any, List
+import math
 from dataclasses import dataclass
 from open_hypergraphs import OpenHypergraph
 
@@ -104,6 +105,23 @@ class Permute:
 
 @dataclass
 class Multiply:
+    T: NdArrayType
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
+
+################################################################################
+# Partial functions arithmetic
+
+@dataclass
+class Divide:
+    """ `Divide: T × T → T` is the partial function `<x,y> → x/y`. """
+    T: NdArrayType
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
+
+@dataclass
+class Power:
+    """ `Power: T × T → T` is the partial function `<x,y> → x^y`. """
     T: NdArrayType
     def source(self): return obj(self.T, self.T)
     def target(self): return obj(self.T)

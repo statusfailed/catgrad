@@ -22,6 +22,10 @@ class Dtype(Enum):
     int32 = auto()
     float32 = auto()
 
+    def is_floating(self):
+        return self.value in _FLOATING_DTYPES
+_FLOATING_DTYPES = { Dtype.float32.value }
+
 @dataclass
 class NdArrayType:
     """ An NdArrayType is the *metadata* for an N-dimensional array.
