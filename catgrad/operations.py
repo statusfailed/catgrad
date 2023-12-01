@@ -52,6 +52,13 @@ class NAdd:
     def target(self): return obj(self.T)
 
 @dataclass
+class Negate:
+    """ ``Negate(T) : T×T → T`` computes ``-x``. """
+    T: NdArrayType
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+
+@dataclass
 class Subtract:
     """ ``Sub(T) : T×T → T`` computes ``(x - y)`` """
     T: NdArrayType

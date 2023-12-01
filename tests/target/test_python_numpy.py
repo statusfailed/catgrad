@@ -66,6 +66,14 @@ def test_subtract(Tx: np.ndarray):
     f = to_python_function(op(Subtract(T)))
     assert_equal(f(x, y), [x-y])
 
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=1))
+def test_negate(Tx: np.ndarray):
+    T, [x] = Tx
+    f = to_python_function(op(Negate(T)))
+    assert_equal(f(x), [-x])
+
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_constant(Tx: np.ndarray):
     T, [x] = Tx

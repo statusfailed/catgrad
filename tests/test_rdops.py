@@ -102,6 +102,40 @@ def test_rd_nadd(Tx: np.ndarray):
     assert_equal(fwd(x), [expected_y])
     assert_equal(rev(dy), [Numpy.ncopy(N.shape, dy)])
 
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=3))
+def test_rd_subtract(Tx):
+    T, [x0, x1, y] = Tx
+
+    e = Subtract(T)
+
+    arrow = to_python_function(e.arrow())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    assert_equal(arrow(x0, x1), [x0 - x1])
+    assert_equal(fwd(x0, x1), [x0 - x1])
+    assert_equal(rev(y), [y, -y])
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2))
+def test_rd_negate(Tx):
+    T, [x, dy] = Tx
+
+    e = Negate(T)
+
+    arrow = to_python_function(e.arrow())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    assert_equal(arrow(x), [-x])
+    assert_equal(fwd(x), [-x])
+    assert_equal(rev(dy), [-dy])
+
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_rd_constant(Tx: np.ndarray):
     T, [x] = Tx

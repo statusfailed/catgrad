@@ -85,6 +85,12 @@ def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     return _call_backend('nadd', [ast.Constant(value=a.op.N.shape), args[0]])
 
 @expr
+def negate(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.Negate
+    assert len(args) == 1
+    return ast.UnaryOp(op=ast.USub(), operand=args[0])
+
+@expr
 def divide(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.Divide
     assert len(args) == 2
@@ -131,6 +137,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,
+    ops.Negate: negate,
     ops.Subtract: binop(ast.Sub()),
     ops.Multiply: binop(ast.Mult()),
     ops.Divide: divide,

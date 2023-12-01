@@ -88,6 +88,16 @@ class NAdd(ops.NAdd, Dagger):
     def arrow(self): return op(ops.NAdd(self.N, self.T))
     def dagger(self): return op(NCopy(self.N, self.T))
 
+class Subtract(ops.Add, Dagger):
+    def arrow(self): return op(ops.Subtract(self.T))
+    def dagger(self):
+        T = obj(self.T)
+        return copy(T) >> (identity(T) @ negate(T))
+
+class Negate(ops.Negate, Dagger):
+    def arrow(self): return op(ops.Negate(self.T))
+    def dagger(self): return op(self)
+
 class Constant(ops.Constant, Dagger):
     def arrow(self): return op(ops.Constant(self.T, self.x))
     def dagger(self): return op(Discard(self.T))
@@ -141,10 +151,17 @@ discard = canonical(lambda T: op(Discard(T)))
 
 add  = canonical(lambda T: op(Add(T)))
 zero = canonical(full1(0))
+subtract = canonical(lambda T: op(Subtract(T)))
+negate = canonical(lambda T: op(Negate(T)))
 
 multiply = canonical(lambda T: op(Multiply(T)))
 # could also call this "full".
 constant = lambda c: canonical(full1(c))
+
+# multiply by a constant
+def scale(c):
+    def scale_wrapper(A: FiniteFunction):
+        return (constant(c)(A) @ identity(A)) >> multiply(A)
 
 ################################################################################
 
@@ -157,3 +174,51 @@ class Forget(FrobeniusFunctor):
         # we lose a lot of speed here using tensor_list, but it's simpler code
         fs = [ x.arrow() for x in x.table ]
         return self.OpenHypergraph().tensor_list(fs, sigma_0, sigma_1)
+
+################################################################################
+# Other definitions
+
+class Sigmoid(ops.Compose, Lens):
+    T: NdArrayType
+
+    def __post_init__(self):
+        if not T.dtype.is_floating():
+            raise ValueError("Sigmoid is not defined for non-floating-point dtypes")
+
+    def arrow(self):
+        T = self.T
+        exp = ops.exp1(T) # exp(x)
+        inc_exp = (op(Constant(T, 1)) @ identity(T)) >> exp # 1 + exp(x)
+        return copy(T) >> (exp @ inc_exp) >> div(T) # exp / (1 + exp(x))
+
+    def rev(self):
+        # TODO: implement arithmetic operations on arrows so we can write
+        # σ * (1 - σ) * dy
+        T = obj(self.T)
+        σ = self.arrow()
+        f = (constant(1)(T) @ identity(T)) >> add(T)
+        grad = copy(T) >> (σ @ f) >> multiply(T)
+        return (grad @ identity(T)) >> multiply(T)
+
+sigmoid = canonical(lambda T: Sigmoid(T))
+
+################################################################################
+# Learner lenses
+
+@dataclass
+class SGD(Lens):
+    T: NdArrayType
+    c: ops.scalar
+
+    def arrow():
+        return identity(obj(self.T))
+
+    def rev(self):
+        A = obj(self.T)
+        (identity(A) @ scale(self.c)(A)) >> subtract(A)
+
+@dataclass
+class MSE(Lens):
+    T: NdArrayType
+    def arrow(): return identity(obj(self.T))
+    def rev(self): return subtract(obj(self.T))
