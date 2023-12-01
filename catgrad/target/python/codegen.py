@@ -131,6 +131,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,
+    ops.Subtract: binop(ast.Sub()),
     ops.Multiply: binop(ast.Mult()),
     ops.Divide: divide,
     ops.Power: binop(ast.Pow()),

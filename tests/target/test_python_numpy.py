@@ -58,6 +58,14 @@ def test_nadd(Tx: np.ndarray):
     expected = [x.sum(axis=0)] # TODO: more dims
     assert_equal(actual, expected)
 
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2))
+def test_subtract(Tx: np.ndarray):
+    T, [x,y] = Tx
+    f = to_python_function(op(Subtract(T)))
+    assert_equal(f(x, y), [x-y])
+
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_constant(Tx: np.ndarray):
     T, [x] = Tx

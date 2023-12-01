@@ -51,6 +51,13 @@ class NAdd:
     def source(self): return obj(self.N + self.T)
     def target(self): return obj(self.T)
 
+@dataclass
+class Subtract:
+    """ ``Sub(T) : T×T → T`` computes ``(x - y)`` """
+    T: NdArrayType
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
+
 scalar = int | float
 @dataclass
 class Constant:
