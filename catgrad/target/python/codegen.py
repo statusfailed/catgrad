@@ -112,8 +112,13 @@ def constant(a: Apply, args: List[ast.Name]) -> ast.Call:
 def compose(a: Apply, args: List[ast.Name]) -> ast.Call:
     assert type(a.op) == ops.Compose
     assert len(args) == 2
-    axes = ast.Constant(value=len(a.op.B.shape))
-    return _call_backend('compose', args + [axes])
+    axes = len(a.op.B.shape)
+    # note: we inline with X @ Y if matrices are of the right shape.
+    if axes == 1 and len(a.op.A.shape) == 1 and len(a.op.C.shape) == 1:
+        return ast.BinOp(left=args[0], op=ast.MatMult(), right=args[1])
+    else:
+        axes = ast.Constant(value=len(a.op.B.shape))
+        return _call_backend('compose', args + [axes])
 
 @expr
 def reshape(a: Apply, args: List[ast.Name]) -> ast.Call:
