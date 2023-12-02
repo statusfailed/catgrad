@@ -194,14 +194,18 @@ def _mk_function_definition(f: OpenHypergraph, name: str = 'fn', op_handlers=OP_
         decorator_list=[],
         type_params=[])
 
-def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
-    filename='<string>'
+def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
     fn_defs = {}
     for name, f in fs.items():
         _assert_identifier(name)
         fn_defs[name] = _mk_function_definition(f, name)
     mod_ast = _mk_module(class_name, list(fn_defs.values()))
     ast.fix_missing_locations(mod_ast)
+    return mod_ast
+
+def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
+    filename='<string>'
+    mod_ast = to_python_class_ast(fs, class_name)
     env: Any = {}
     exec(compile(mod_ast, filename=filename, mode='exec'), env)
 

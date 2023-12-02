@@ -162,6 +162,7 @@ constant = lambda c: canonical(full1(c))
 def scale(c):
     def scale_wrapper(A: FiniteFunction):
         return (constant(c)(A) @ identity(A)) >> multiply(A)
+    return scale_wrapper
 
 ################################################################################
 
@@ -200,7 +201,7 @@ class Sigmoid(ops.Compose, Lens):
         grad = copy(T) >> (σ @ f) >> multiply(T)
         return (grad @ identity(T)) >> multiply(T)
 
-sigmoid = canonical(lambda T: Sigmoid(T))
+sigmoid = canonical(lambda T: op(Sigmoid(T)))
 
 ################################################################################
 # Learner lenses
@@ -209,16 +210,22 @@ sigmoid = canonical(lambda T: Sigmoid(T))
 class SGD(Lens):
     T: NdArrayType
     c: ops.scalar
-
-    def arrow():
-        return identity(obj(self.T))
-
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+    def arrow(self): return identity(obj(self.T))
     def rev(self):
-        A = obj(self.T)
-        (identity(A) @ scale(self.c)(A)) >> subtract(A)
+        T = obj(self.T)
+        return (identity(T) @ scale(self.c)(T)) >> subtract(T)
+
+def sgd(c: ops.scalar):
+    return canonical(lambda T: op(SGD(T, c)))
 
 @dataclass
 class MSE(Lens):
     T: NdArrayType
-    def arrow(): return identity(obj(self.T))
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+    def arrow(self): return identity(obj(self.T))
     def rev(self): return subtract(obj(self.T))
+
+mse = canonical(lambda T: op(MSE(T)))

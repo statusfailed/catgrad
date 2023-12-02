@@ -3,12 +3,15 @@ from typing import List
 
 from open_hypergraphs import OpenHypergraph, Hypergraph
 
-def assert_equal(xs: List[np.ndarray], ys: List[np.ndarray]):
+def assert_equal(xs: List[np.ndarray], ys: List[np.ndarray], exact=True):
     assert len(xs) == len(ys)
     for x, y in zip(xs, ys):
         assert x.shape == y.shape
         assert x.dtype == y.dtype
-        assert np.array_equal(x, y, equal_nan=True)
+        if exact:
+            assert np.array_equal(x, y, equal_nan=True)
+        else:
+            assert np.allclose(x, y, equal_nan=True)
 
 # NOTE: this method lifted from OpenHypergraphs test suite!
 # TODO: replace with real equality checking when available

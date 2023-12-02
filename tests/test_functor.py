@@ -7,10 +7,11 @@ import tests.strategies as strategies
 
 from open_hypergraphs import FiniteFunction, OpenHypergraph
 
-from catgrad.target.python import to_python_function
+from catgrad.target.python import to_python_function, to_python_class_ast
 from catgrad.target.python.array_backend import Numpy
-from catgrad.signature import obj, NdArrayType, Dtype
-from catgrad.rdops import Forget, copy, discard, add, zero, multiply, constant
+from catgrad.signature import op, obj, NdArrayType, Dtype
+from catgrad.rdops import Forget, Compose, copy, discard, add, zero, multiply, constant, negate
+from catgrad.combinators import identity
 
 from catgrad.functor import Bidirectional
 
@@ -77,4 +78,53 @@ def test_bidirectional_copy(Xcv):
     actual = f(*args, *dy)
     assert_equal(expected, actual)
 
-# TODO: test more complex diagrams + their expected reverse derivatives.
+@given(strategies.objects_and_values(negate))
+def test_double_negate(Xcv):
+    X, c, v = Xcv
+    c = (c >> c) @ (c >> c)
+    d = F(B.adapt(B(c), c.source, c.target))
+    f = to_python_function(d)
+
+    args = v
+    dy = [ np.ones(shape=A.shape, dtype=Numpy.dtype(A.dtype)) for A in X ]
+
+    # double negation is identity
+    assert_equal(f(*v, *v, *dy, *dy), [*v, *v, *dy, *dy])
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(strategies.ndarrays(n=4))
+def test_mul_assoc(Tx):
+    T, xs = Tx
+    # keep arrays small, otherwise we end up with unfortunate FP-non-associative-weirdness.
+    a_min = Numpy.dtype(T.dtype)(-2**15)
+    a_max = Numpy.dtype(T.dtype)(2**15)
+    x0, x1, x2, dy = [ np.clip(v, a_min, a_max) for v in xs ]
+
+    T = obj(T)
+
+    c = (multiply(T) @ identity(T)) >> multiply(T)
+    d = F(B.adapt(B(c), c.source, c.target))
+    f = to_python_function(d)
+
+    actual = f(x0, x1, x2, dy)
+    expected = [x0 * x1 * x2, dy*x1*x2, dy*x0*x2, dy*x0*x1]
+    assert_equal(actual, expected, exact=False)
+
+def test_compose_assoc():
+    # This testcase specifically reproduces a (now fixed) bug in
+    # open_hypergraphs where "interleave_blocks" maps were incorrectly inverted.
+    T = NdArrayType((1,), Dtype.int32)
+    U = NdArrayType((2,), Dtype.int32)
+    V = NdArrayType((3,), Dtype.int32)
+    W = NdArrayType((4,), Dtype.int32)
+
+    c = (op(Compose(T,U,V)) @ identity(obj(V+W))) >> op(Compose(T,V,W))
+
+    x0 = np.ones((1,2), np.int32)
+    x1 = np.ones((2,3), np.int32)
+    x2 = np.ones((3,4), np.int32)
+
+    dy = np.ones((1,4), np.int32)
+
+    d = F(B.adapt(B(c), c.source, c.target))
