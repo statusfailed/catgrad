@@ -179,27 +179,38 @@ class Forget(FrobeniusFunctor):
 ################################################################################
 # Other definitions
 
-class Sigmoid(ops.Compose, Lens):
+@dataclass
+class Sigmoid(Lens):
     T: NdArrayType
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
 
     def __post_init__(self):
-        if not T.dtype.is_floating():
+        if not self.T.dtype.is_floating():
             raise ValueError("Sigmoid is not defined for non-floating-point dtypes")
 
+    # TODO: tidy me
     def arrow(self):
+        # x → exp(x) / (1 + exp(x))
+        # x → 1 / (1 + exp(-x))
         T = self.T
-        exp = ops.exp1(T) # exp(x)
-        inc_exp = (op(Constant(T, 1)) @ identity(T)) >> exp # 1 + exp(x)
-        return copy(T) >> (exp @ inc_exp) >> div(T) # exp / (1 + exp(x))
+        U = NdArrayType((), T.dtype)
+
+        # the 1 constant at shape T
+        full1 = op(ops.Constant(U, 1)) >> op(ops.NCopy(T, U))
+        inc = (full1 @ identity(obj(T))) >> op(ops.Add(T))
+
+        den = op(ops.Negate(T)) >> ops.exp1(T) >> inc
+        return (full1 @ den) >> op(ops.Divide(T))
 
     def rev(self):
         # TODO: implement arithmetic operations on arrows so we can write
         # σ * (1 - σ) * dy
         T = obj(self.T)
-        σ = self.arrow()
-        f = (constant(1)(T) @ identity(T)) >> add(T)
-        grad = copy(T) >> (σ @ f) >> multiply(T)
-        return (grad @ identity(T)) >> multiply(T)
+        σ = op(self)
+        f = (constant(1)(T) @ σ) >> subtract(T) # 1 - σ
+        grad = copy(T) >> (σ @ f) >> multiply(T) # σ * (1 - σ)
+        return (grad @ identity(T)) >> multiply(T) # σ * (1 - σ) * dy
 
 sigmoid = canonical(lambda T: op(Sigmoid(T)))
 

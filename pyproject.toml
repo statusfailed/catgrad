@@ -13,13 +13,13 @@ classifiers = [
 ]
 dependencies = [
   "numpy~=1.23.3",
-  "scipy~=1.10.0",
   "open-hypergraphs~=0.1.0",
 ]
 [project.optional-dependencies]
 dev = [
   "hypothesis",
   "pytest",
+  "scipy~=1.10.0",
 ]
 
 [project.urls]

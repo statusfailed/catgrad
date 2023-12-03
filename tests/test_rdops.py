@@ -9,7 +9,7 @@ from tests.utils import assert_equal
 from tests.strategies import ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
 import tests.strategies as strategies
 
-from catgrad.signature import NdArrayType
+from catgrad.signature import NdArrayType, Dtype
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
 from catgrad.rdops import *
@@ -226,3 +226,23 @@ def test_rd_permute(p_x: Tuple[ops.Permute, np.ndarray]):
     assert_equal(arrow(x), [expected_y])
     assert_equal(fwd(x), [expected_y]) # this one's a lens
     assert_equal(rev(expected_y), [x]) # inverse
+
+from hypothesis import reproduce_failure
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2, array_type=ndarraytypes(dtype=st.just(Dtype.float32))))
+def test_rd_sigmoid(Tx):
+    T, [x, dy] = Tx
+
+    e = Sigmoid(NdArrayType((), Dtype.float32))
+
+    arrow = to_python_function(e.arrow())
+    fwd = to_python_function(F(e.fwd()))
+    rev = to_python_function(F(e.rev()))
+
+    from scipy.special import expit
+    rexpit = lambda x, dy: (expit(x) * (1 - expit(x)) * dy).astype(Numpy.dtype(T.dtype))
+
+    assert_equal(arrow(x), [expit(x)], exact=False)
+    assert_equal(fwd(x), [expit(x), x], exact=False)
+    assert_equal(rev(x, dy), [rexpit(x, dy)], exact=False)

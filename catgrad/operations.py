@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from open_hypergraphs import OpenHypergraph
 
 from catgrad.signature import NdArrayType, obj, op
+from catgrad.combinators import identity
 
 def prod(xs):
     a = 1
@@ -139,6 +140,14 @@ class Power:
     T: NdArrayType
     def source(self): return obj(self.T, self.T)
     def target(self): return obj(self.T)
+
+# TODO: tidy this up
+# helper for the 'exp' circuit.
+def exp1(T: NdArrayType):
+    U = NdArrayType((), T.dtype)
+    a = op(Constant(U, math.e))
+    b = op(NCopy(T, U))
+    return ((a >> b) @ identity(obj(T))) >> op(Power(T))
 
 ################################################################################
 # Matrix multiplication
