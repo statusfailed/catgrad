@@ -1,4 +1,9 @@
-# catgrad
+<div align="center">
+    ![logo](https://raw.githubusercontent.com/statusfailed/catgrad/master/docs/source/catgrad-logo.png)
+    <h1>catgrad</h1>
+</div>
+
+---
 
 You like category theory? You like tinygrad? You love catgrad! ❤️
 
