@@ -12,8 +12,9 @@ class Numpy:
             case x: raise ValueError(f"dtype {x} is not implemented for Numpy")
 
     @staticmethod
-    def constant(x: Any, dtype: signature.Dtype) -> np.ndarray:
-        return np.array(x, dtype=Numpy.dtype(dtype))
+    def constant(x: Any, shape: Tuple, dtype: signature.Dtype) -> np.ndarray:
+        # TODO: does this allocate the full array? Check perf
+        return np.full(shape, x, dtype=Numpy.dtype(dtype))
 
     @staticmethod
     def ncopy(shape: Tuple, x: np.ndarray) -> np.ndarray:

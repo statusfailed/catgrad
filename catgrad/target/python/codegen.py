@@ -101,11 +101,14 @@ def divide(a: Apply, args: List[ast.Name]) -> ast.expr:
 def constant(a: Apply, args: List[ast.Name]) -> ast.Call:
     assert type(a.op) == ops.Constant
     assert len(args) == 0
+    shape = ast.Tuple(
+            elts=[ ast.Constant(value=i) for i in a.op.T.shape ],
+            ctx=ast.Load())
     dtype = ast.Attribute(
             value=ast.Name(id="Dtype", ctx=ast.Load()),
             attr=a.op.T.dtype.name,
             ctx=ast.Load())
-    return _call_backend('constant', [ast.Constant(value=a.op.x), dtype])
+    return _call_backend('constant', [ast.Constant(value=a.op.x), shape, dtype])
 
 # An expression like self.backend.compose(x_0, x_1, 2)
 @expr

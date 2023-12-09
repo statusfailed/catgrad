@@ -4,6 +4,9 @@ from catgrad.combinators import canonical
 from catgrad.rdops import *
 from catgrad.parameters import parameter
 
+def flatten(X: NdArrayType, Y: NdArrayType):
+    return op(Reshape(X, Y))
+
 def linear(A: NdArrayType, B: NdArrayType, C: NdArrayType):
     if not (A.dtype == B.dtype and B.dtype == C.dtype):
         raise ValueError("linear: dtypes must be equal, but got dtypes {A.dtype=} {B.dtype=} {C.dtype=}")

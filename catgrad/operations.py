@@ -75,8 +75,6 @@ class Constant:
     def __post_init__(self):
         if not isinstance(self.x, scalar):
             raise ValueError(f"constant {self.x} is not a scalar {scalar}")
-        if self.T.shape != ():
-            raise ValueError(f"Constant.T.shape must be () but was {self.T.shape}")
 
     def source(self): return obj()
     def target(self): return obj(self.T)
@@ -144,10 +142,7 @@ class Power:
 # TODO: tidy this up
 # helper for the 'exp' circuit.
 def exp1(T: NdArrayType):
-    U = NdArrayType((), T.dtype)
-    a = op(Constant(U, math.e))
-    b = op(NCopy(T, U))
-    return ((a >> b) @ identity(obj(T))) >> op(Power(T))
+    return (op(Constant(T, math.e)) @ identity(obj(T))) >> op(Power(T))
 
 ################################################################################
 # Matrix multiplication

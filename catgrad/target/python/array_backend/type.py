@@ -32,7 +32,7 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
-    def constant(x: Any) -> A:
+    def constant(x: Any, shape: Tuple, dtype: signature.Dtype) -> A:
         ...
 
     @staticmethod

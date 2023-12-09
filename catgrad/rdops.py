@@ -75,10 +75,8 @@ class NCopy(ops.NCopy, Dagger):
 
 class Discard(ops.Discard, Dagger):
     def arrow(self): return op(ops.Discard(self.T))
-    # NOTE: we do one scalar zero and broadcast into the correct shape
     def dagger(self):
-        U = NdArrayType((), self.T.dtype)
-        return op(Constant(U, 0)) >> op(NCopy(self.T, U))
+        return op(Constant(self.T, 0))
 
 class Add(ops.Add, Dagger):
     def arrow(self): return op(ops.Add(self.T))
@@ -135,28 +133,30 @@ class Compose(ops.Compose, Lens):
 ################################################################################
 # Canonical combinators
 
-def full1(c: ops.scalar):
-    """ ``full1(c)`` returns a function f(T: NdArrayType) which constructs a
-    circuit of type ``I → T`` representing the constant array of type T filled
-    with values ``c``. """
-    def full1_wrapped(T: NdArrayType):
-        U = NdArrayType((), T.dtype)
-        a = op(Constant(U, c))
-        b = op(NCopy(T, U))
-        return a >> b
-    return full1_wrapped
+# def full1(c: ops.scalar):
+    # """ ``full1(c)`` returns a function f(T: NdArrayType) which constructs a
+    # circuit of type ``I → T`` representing the constant array of type T filled
+    # with values ``c``. """
+    # def full1_wrapped(T: NdArrayType):
+        # U = NdArrayType((), T.dtype)
+        # a = op(Constant(U, c))
+        # b = op(NCopy(T, U))
+        # return a >> b
+    # return full1_wrapped
 
 copy = canonical(lambda T: op(Copy(T)))
 discard = canonical(lambda T: op(Discard(T)))
 
 add  = canonical(lambda T: op(Add(T)))
-zero = canonical(full1(0))
+zero = canonical(lambda T: op(Constant(T, 0)))
 subtract = canonical(lambda T: op(Subtract(T)))
 negate = canonical(lambda T: op(Negate(T)))
 
 multiply = canonical(lambda T: op(Multiply(T)))
+
 # could also call this "full".
-constant = lambda c: canonical(full1(c))
+def constant(c):
+    return canonical(lambda T: op(Constant(T, c)))
 
 # multiply by a constant
 def scale(c):
