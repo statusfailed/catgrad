@@ -133,17 +133,6 @@ class Compose(ops.Compose, Lens):
 ################################################################################
 # Canonical combinators
 
-# def full1(c: ops.scalar):
-    # """ ``full1(c)`` returns a function f(T: NdArrayType) which constructs a
-    # circuit of type ``I → T`` representing the constant array of type T filled
-    # with values ``c``. """
-    # def full1_wrapped(T: NdArrayType):
-        # U = NdArrayType((), T.dtype)
-        # a = op(Constant(U, c))
-        # b = op(NCopy(T, U))
-        # return a >> b
-    # return full1_wrapped
-
 copy = canonical(lambda T: op(Copy(T)))
 discard = canonical(lambda T: op(Discard(T)))
 
@@ -191,13 +180,13 @@ class Sigmoid(Lens):
 
     # TODO: tidy me
     def arrow(self):
-        # x → exp(x) / (1 + exp(x))
-        # x → 1 / (1 + exp(-x))
+        # x → exp(x) / (1 + exp(x))     -- not stable
+        # x → 1 / (1 + exp(-x))         -- stable
         T = self.T
         U = NdArrayType((), T.dtype)
 
         # the 1 constant at shape T
-        full1 = op(ops.Constant(U, 1)) >> op(ops.NCopy(T, U))
+        full1 = op(ops.Constant(T, 1))
         inc = (full1 @ identity(obj(T))) >> op(ops.Add(T))
 
         den = op(ops.Negate(T)) >> ops.exp1(T) >> inc
