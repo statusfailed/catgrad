@@ -10,32 +10,44 @@ your model's reverse pass into static code.
 This means your training loop can run without needing a deep learning framework
 (not even catgrad!)
 
-Here is a linear model in `catgrad`:
+Here is a linear model in catgrad:
 
-    model = layers.linear(BATCH_TYPE, INPUT_TYPE, OUTPUT_TYPE)
+```python
+model = layers.linear(BATCH_TYPE, INPUT_TYPE, OUTPUT_TYPE)
+```
 
-catgrad can compile this model into static python code:
+catgrad can compile this model...
 
-    class CompiledModel:
-        backend: ArrayBackend
+```python
+CompiledModel, _, _ = compile_model(model, layers.sgd(learning_rate), layers.mse)
+```
 
-        def predict(self, x1, x0):
-            x2 = x0 @ x1
-            return [x2]
+... into static code like this...
 
-        def step(self, x0, x1, x9):
-            x4, x10 = (x0, x0)
-            x11, x12 = (x1, x1)
-            x16 = self.backend.constant(0.0001, Dtype.float32)
-            # ... snip ...
-            x18 = x17 * x5
-            x2 = x10 - x18
-            return [x2]
+```python
+class CompiledModel:
+    backend: ArrayBackend
+
+    def predict(self, x1, x0):
+        x2 = x0 @ x1
+        return [x2]
+
+    def step(self, x0, x1, x9):
+        x4, x10 = (x0, x0)
+        x11, x12 = (x1, x1)
+        x16 = self.backend.constant(0.0001, Dtype.float32)
+        # ... snip ...
+        x18 = x17 * x5
+        x2 = x10 - x18
+        return [x2]
+```
 
 ... so you can train your model by just iterating `step`; no autograd needed:
 
     for i in range(0, NUM_ITER):
         p = step(p, x, y)
+
+Catgrad doesn't just compile to Python: I'm working on support for other targets like C++ (ggml), CUDA, FPGAs, and more!
 
 Catgrad uses [reverse derivatives](https://arxiv.org/abs/1910.07065)
 and [open hypergraphs](https://github.com/statusfailed/open-hypergraphs/)
