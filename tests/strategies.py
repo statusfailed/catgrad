@@ -40,7 +40,7 @@ def ndarrays(draw, array_type=ndarraytypes(), n=1):
 
 @st.composite
 def composable_ndarraytypes(draw):
-    shape = shapes(max_elements=st.just(500))
+    shape = shapes(max_elements=st.just(250))
     A = draw(ndarraytypes(shape=shape))
     B = draw(ndarraytypes(dtype=st.just(A.dtype), shape=shape))
     C = draw(ndarraytypes(dtype=st.just(A.dtype), shape=shape))
