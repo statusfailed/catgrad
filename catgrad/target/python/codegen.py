@@ -48,6 +48,12 @@ def binop(b) -> Callable[[Apply], List[ast.Assign]]:
         return ast.BinOp(left=args[0], op=b, right=args[1])
     return expr(binop_wrapper)
 
+def comparison(b) -> Callable[[Apply], List[ast.Assign]]:
+    def binop_wrapper(a: Apply, args: List[ast.Name]) -> ast.expr:
+        assert len(args) == 2
+        return ast.Compare(left=args[0], ops=[b], comparators=[args[1]])
+    return expr(binop_wrapper)
+
 def _call_backend(method: str, args) -> ast.Call:
     # AST expression for calling a backend method, e.g., "self.backend.compose(x, y, z)"
     _assert_identifier(method)
@@ -154,6 +160,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Compose: compose, # binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
     ops.Reshape: reshape,
     ops.Permute: permute,
+    ops.Gt: comparison(ast.Gt()),
 }
 
 ################################################################################
@@ -192,7 +199,14 @@ def _mk_function_definition(f: OpenHypergraph, name: str = 'fn', op_handlers=OP_
 
     # create a python FunctionDef
     args = _mk_arguments(["self"] + [name_id(i) for i in fn.args])
-    body = [ assignment for apply in fn.body for assignment in op_handlers[type(apply.op)](apply) ]
+    body = []
+    for apply in fn.body:
+        op_type = type(apply.op)
+        op_handler = op_handlers.get(op_type)
+        if not op_handler:
+            raise ValueError(f"Unknown op {op_type}")
+        body.extend(op_handler(apply))
+
     rval = ast.List(elts=[ load(i) for i in fn.returns ], ctx=ast.Load())
     body.append(ast.Return(value=rval, ctx=ast.Load()))
     return ast.FunctionDef(

@@ -227,7 +227,24 @@ def test_rd_permute(p_x: Tuple[ops.Permute, np.ndarray]):
     assert_equal(fwd(x), [expected_y]) # this one's a lens
     assert_equal(rev(expected_y), [x]) # inverse
 
-from hypothesis import reproduce_failure
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=3))
+def test_rd_gt(Tx):
+    T, [x0, x1, y] = Tx
+
+    e = Gt(T)
+
+    arrow = to_python_function(e.arrow())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    assert_equal(arrow(x0, x1), [x0 > x1])
+    assert_equal(fwd(x0, x1), [x0 > x1])
+    z = np.zeros(T.shape, Numpy.dtype(T.dtype))
+    assert_equal(rev(y), [z, z])
+
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
 @given(ndarrays(n=2, array_type=ndarraytypes(dtype=st.just(Dtype.float32))))

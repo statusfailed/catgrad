@@ -123,6 +123,15 @@ class Multiply:
     def target(self): return obj(self.T)
 
 ################################################################################
+# Comparators
+
+@dataclass
+class Gt:
+    T: NdArrayType
+    def source(self): return obj(self.T, self.T)
+    def target(self): return obj(self.T)
+
+################################################################################
 # Partial functions arithmetic
 
 @dataclass

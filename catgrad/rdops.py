@@ -108,6 +108,13 @@ class Permute(ops.Permute, Dagger):
     def arrow(self): return op(ops.Permute(self.T, self.p))
     def dagger(self): return op(Permute(self.T, np.argsort(self.p).tolist()))
 
+class Gt(ops.Gt, Optic):
+    def arrow(self): return op(ops.Gt(self.T))
+    def residual(self): return obj()
+    def fwd(self): return op(self)
+    def rev(self):
+        return op(Discard(self.T)) >> zero(obj(self.T, self.T))
+
 class Multiply(ops.Multiply, Lens):
     def arrow(self): return op(ops.Multiply(self.T))
     def rev(self):
