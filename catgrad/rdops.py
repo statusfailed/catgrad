@@ -160,6 +160,16 @@ def scale(c):
         return (constant(c)(A) @ identity(A)) >> multiply(A)
     return scale_wrapper
 
+########################################
+# comparators
+
+gt = canonical(lambda T: op(Gt(T)))
+
+def gt_constant(c):
+    def gt_constant_wrapper(A: FiniteFunction):
+        return (identity(A) @ constant(c)(A)) >> gt(A)
+    return gt_constant_wrapper
+
 ################################################################################
 
 # Translate RDOps to basic array operations
@@ -209,6 +219,9 @@ class Sigmoid(Lens):
         return (grad @ identity(T)) >> multiply(T) # σ * (1 - σ) * dy
 
 sigmoid = canonical(lambda T: op(Sigmoid(T)))
+
+def relu(X):
+    return copy(X) >> (gt_constant(0)(X) @ identity(X)) >> multiply(X)
 
 ################################################################################
 # Learner lenses

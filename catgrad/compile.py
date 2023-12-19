@@ -32,3 +32,9 @@ def compile_model(model, opt, loss):
     }
     mod_ast = to_python_class_ast(fns)
     return to_python_class(fns), P, mod_ast
+
+def rdiff(f):
+    """ Take the reverse derivative of a map built from RDOps """
+    f_Rf = B.adapt(B(f), f.source, f.target)
+    Rf = f_Rf >> (discard(f.target) @ identity(f.source))
+    return Rf

@@ -13,6 +13,7 @@ from catgrad.signature import NdArrayType, Dtype
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
 from catgrad.rdops import *
+from catgrad.compile import rdiff
 
 F = Forget()
 
@@ -263,3 +264,18 @@ def test_rd_sigmoid(Tx):
     assert_equal(arrow(x), [expit(x)], exact=False)
     assert_equal(fwd(x), [expit(x), x], exact=False)
     assert_equal(rev(x, dy), [rexpit(x, dy)], exact=False)
+
+from hypothesis import reproduce_failure
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2, array_type=ndarraytypes(dtype=st.just(Dtype.float32))))
+def test_rd_relu(Tx):
+    T, [x, dy] = Tx
+
+    f = relu(obj(T))
+    r = rdiff(f)
+
+    fwd = to_python_function(F(f))
+    rev = to_python_function(F(r))
+    assert_equal(fwd(x), [(x>0)*x], exact=True)
+    assert_equal(rev(x, dy), [(x>0)*dy], exact=True)
