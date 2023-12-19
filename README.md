@@ -1,4 +1,4 @@
-<div align="center"> 
+<div align="center">
 <img src="https://raw.githubusercontent.com/statusfailed/catgrad/master/docs/source/catgrad-logo.svg" height=200 />
 <h1>catgrad</h1>
 </div>
