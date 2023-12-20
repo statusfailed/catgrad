@@ -9,6 +9,7 @@ class Numpy:
         match d:
             case signature.Dtype.int32: return np.int32
             case signature.Dtype.float32: return np.float32
+            case signature.Dtype.bool: return np.bool
             case x: raise ValueError(f"dtype {x} is not implemented for Numpy")
 
     @staticmethod

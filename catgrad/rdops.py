@@ -96,6 +96,10 @@ class Negate(ops.Negate, Dagger):
     def arrow(self): return op(ops.Negate(self.T))
     def dagger(self): return op(self)
 
+class Invert(ops.Invert, Dagger):
+    def arrow(self): return op(ops.Invert(self.T))
+    def dagger(self): return op(self)
+
 class Constant(ops.Constant, Dagger):
     def arrow(self): return op(ops.Constant(self.T, self.x))
     def dagger(self): return op(Discard(self.T))

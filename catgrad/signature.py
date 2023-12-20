@@ -21,6 +21,7 @@ class Dtype(Enum):
     """ Dtypes correspond to semirings: a choice of dtype specifies field/(semi)ring operations. """
     int32 = auto()
     float32 = auto()
+    bool = auto()
 
     def is_floating(self):
         return self.value in _FLOATING_DTYPES

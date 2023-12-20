@@ -13,7 +13,10 @@ from catgrad.signature import obj, Dtype, NdArrayType
 from catgrad.target.python.array_backend import Numpy
 import catgrad.operations as ops
 
-dtypes = st.sampled_from(Dtype)
+# NOTE: by default we only sample from dtypes which form a ring; bool will break
+# because negate is not supported.
+dtypes = st.sampled_from([Dtype.int32, Dtype.float32])
+integral_dtypes = st.sampled_from([Dtype.int32, Dtype.bool])
 
 MAX_ELEMENTS = 1_000_000
 @st.composite

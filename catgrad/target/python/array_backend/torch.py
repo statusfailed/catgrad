@@ -9,7 +9,8 @@ class Torch:
         match d:
             case signature.Dtype.int32: return torch.int32
             case signature.Dtype.float32: return torch.float32
-            case x: raise ValueError(f"dtype {x} is not implemented for Numpy")
+            case signature.Dtype.float32: return torch.bool
+            case x: raise ValueError(f"dtype {x} is not implemented for Torch")
 
     @staticmethod
     def constant(x: Any, shape: Tuple, dtype: signature.Dtype) -> torch.tensor:

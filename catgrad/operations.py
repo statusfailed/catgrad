@@ -60,6 +60,15 @@ class Negate:
     def target(self): return obj(self.T)
 
 @dataclass
+class Invert:
+    T: NdArrayType
+    def __post_init__(self):
+        if self.T.dtype.is_floating():
+            raise ValueError("Invert operation not supported for floating dtypes")
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+
+@dataclass
 class Subtract:
     """ ``Sub(T) : T×T → T`` computes ``(x - y)`` """
     T: NdArrayType

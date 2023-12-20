@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
+from tests.strategies import integral_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType, Dtype
@@ -137,6 +137,21 @@ def test_rd_negate(Tx):
     assert_equal(fwd(x), [-x])
     assert_equal(rev(dy), [-dy])
 
+@given(ndarrays(n=2, array_type=ndarraytypes(dtype=integral_dtypes)))
+def test_rd_invert(Tx):
+    T, [x, dy] = Tx
+
+    e = Invert(T)
+
+    arrow = to_python_function(e.arrow())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    assert_equal(arrow(x), [~x])
+    assert_equal(fwd(x), [~x])
+    assert_equal(rev(dy), [~dy])
+
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_rd_constant(Tx: np.ndarray):
     T, [x] = Tx
@@ -265,7 +280,6 @@ def test_rd_sigmoid(Tx):
     assert_equal(fwd(x), [expit(x), x], exact=False)
     assert_equal(rev(x, dy), [rexpit(x, dy)], exact=False)
 
-from hypothesis import reproduce_failure
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
 @given(ndarrays(n=2, array_type=ndarraytypes(dtype=st.just(Dtype.float32))))
