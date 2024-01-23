@@ -26,8 +26,12 @@ def compile_model(model, opt, loss):
     # step_circuit : P × X × Y → P
     step_circuit = F(Rg >> (discard(Y) @ identity(P) @ discard(X)))
 
+    rev = rdiff(parametrised)
+    rev_p = rev >> (identity(P) @ discard(X))
     fns = {
         "predict": predict_circuit,
+        "rev": F(rev), # gradients
+        "rev_p": F(rev_p), # gradients w.r.t. parameters only
         "step": step_circuit,
     }
     mod_ast = to_python_class_ast(fns)
