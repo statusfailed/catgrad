@@ -11,7 +11,7 @@ from open_hypergraphs import FiniteFunction, OpenHypergraph
 
 from catgrad.signature import obj, Dtype, NdArrayType
 from catgrad.target.python.array_backend import Numpy
-import catgrad.operations as ops
+import catgrad.core.operations as ops
 
 # NOTE: by default we only sample from dtypes which form a ring; bool will break
 # because negate is not supported.

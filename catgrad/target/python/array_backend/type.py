@@ -25,7 +25,7 @@ A = TypeVar('A', bound=NdArray)
 
 class ArrayBackend(Protocol[A]):
     """ An ArrayBackend is an implementation of the basic array operations in
-    :py:mod:`catgrad.operations`.
+    :py:mod:`catgrad.core.operations`.
     See for example the :py:class:`Numpy` backend. """
     @staticmethod
     def dtype(d: signature.Dtype) -> Any:

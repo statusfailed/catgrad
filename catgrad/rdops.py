@@ -4,7 +4,7 @@ from abc import abstractmethod
 from open_hypergraphs import OpenHypergraph, FiniteFunction, IndexedCoproduct, FrobeniusFunctor
 
 from catgrad.signature import NdArrayType, obj, op, sigma_0, sigma_1
-import catgrad.operations as ops
+import catgrad.core.operations as ops
 from catgrad.combinators import *
 
 class Optic:

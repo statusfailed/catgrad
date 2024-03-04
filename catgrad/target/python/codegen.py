@@ -2,7 +2,7 @@ import ast
 from typing import Type, Any, List, Tuple, Callable
 
 from catgrad.signature import Dtype, NdArrayType, obj
-import catgrad.operations as ops
+import catgrad.core.operations as ops
 from catgrad.target.ast import *
 from catgrad.target.python.array_backend import Numpy
 
