@@ -10,7 +10,7 @@ from open_hypergraphs import FiniteFunction, OpenHypergraph
 from catgrad.target.python import to_python_function, to_python_class_ast
 from catgrad.target.python.array_backend import Numpy
 from catgrad.signature import op, obj, NdArrayType, Dtype
-from catgrad.rdops import Forget, Compose, copy, discard, add, zero, multiply, constant, negate
+from catgrad.bidirectional.operation import Forget, Compose, copy, discard, add, zero, multiply, constant, negate
 from catgrad.combinators import identity
 
 from catgrad.functor import Bidirectional

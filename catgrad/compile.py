@@ -1,9 +1,9 @@
 from catgrad.target.python import to_python_class, to_python_class_ast
 
 from catgrad.combinators import identity
-from catgrad.rdops import sgd, mse, SGD, MSE, discard
+from catgrad.bidirectional.operation import sgd, mse, SGD, MSE, discard
 from catgrad.functor import Bidirectional
-from catgrad.rdops import Forget
+from catgrad.bidirectional.operation import Forget
 from catgrad.parameters import factor_parameters
 
 F = Forget()

@@ -12,7 +12,7 @@ import tests.strategies as strategies
 from catgrad.signature import NdArrayType, Dtype
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
-from catgrad.rdops import *
+from catgrad.bidirectional.operation import *
 from catgrad.compile import rdiff
 
 F = Forget()

@@ -4,7 +4,7 @@ import numpy as np
 from catgrad.combinators import *
 from catgrad.signature import *
 from catgrad.parameters import *
-from catgrad.rdops import *
+from catgrad.bidirectional.operation import *
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
 

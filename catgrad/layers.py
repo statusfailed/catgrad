@@ -1,7 +1,7 @@
 """ neural network layers """
 from catgrad.signature import NdArrayType
 from catgrad.combinators import canonical
-from catgrad.rdops import *
+from catgrad.bidirectional.operation import *
 from catgrad.parameters import parameter
 
 def flatten(X: NdArrayType, Y: NdArrayType):
