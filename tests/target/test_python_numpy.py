@@ -11,7 +11,7 @@ import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType
 from catgrad.target.python import to_python_function
-from catgrad.core.operations import *
+from catgrad.core.operation import *
 
 @given(ndarrays())
 def test_copy(Tx: np.ndarray):

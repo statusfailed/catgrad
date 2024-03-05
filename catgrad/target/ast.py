@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from open_hypergraphs import FiniteFunction, OpenHypergraph
 from open_hypergraphs.numpy import layer
-from catgrad.core.operations import operation
+from catgrad.core.operation import operation
 
 # An `Apply` represents the application of some operation to arguments lhs and rhs.
 @dataclass
