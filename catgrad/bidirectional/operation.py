@@ -130,6 +130,7 @@ class Multiply(ops.Multiply, Lens):
         return lhs >> mid >> rhs
 
 class Compose(ops.Compose, Lens):
+    """ Tensor composition (diagrammatic order) """
     def arrow(self): return op(ops.Compose(self.A, self.B, self.C))
     def rev(self):
         A, B, C = self.A, self.B, self.C
@@ -173,18 +174,6 @@ def gt_constant(c):
     def gt_constant_wrapper(A: FiniteFunction):
         return (identity(A) @ constant(c)(A)) >> gt(A)
     return gt_constant_wrapper
-
-################################################################################
-
-# Translate RDOps to basic array operations
-class Forget(FrobeniusFunctor):
-    def map_objects(self, objects: FiniteFunction) -> IndexedCoproduct:
-        return self.IndexedCoproduct().elements(objects)
-
-    def map_operations(self, x: FiniteFunction, sources: IndexedCoproduct, targets: IndexedCoproduct) -> OpenHypergraph:
-        # we lose a lot of speed here using tensor_list, but it's simpler code
-        fs = [ x.arrow() for x in x.table ]
-        return self.OpenHypergraph().tensor_list(fs, sigma_0, sigma_1)
 
 ################################################################################
 # Other definitions

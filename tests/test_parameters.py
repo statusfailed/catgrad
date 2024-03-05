@@ -5,6 +5,7 @@ from catgrad.combinators import *
 from catgrad.signature import *
 from catgrad.parameters import *
 from catgrad.bidirectional.operation import *
+from catgrad.bidirectional.functor import Forget
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
 

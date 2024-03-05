@@ -2,8 +2,7 @@ from catgrad.target.python import to_python_class, to_python_class_ast
 
 from catgrad.combinators import identity
 from catgrad.bidirectional.operation import sgd, mse, SGD, MSE, discard
-from catgrad.functor import Bidirectional
-from catgrad.bidirectional.operation import Forget
+from catgrad.bidirectional.functor import Forget, Bidirectional
 from catgrad.parameters import factor_parameters
 
 F = Forget()

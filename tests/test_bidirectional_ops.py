@@ -13,6 +13,7 @@ from catgrad.signature import NdArrayType, Dtype
 from catgrad.target.python import to_python_function
 from catgrad.target.python.array_backend import Numpy
 from catgrad.bidirectional.operation import *
+from catgrad.bidirectional.functor import Forget
 from catgrad.compile import rdiff
 
 F = Forget()
