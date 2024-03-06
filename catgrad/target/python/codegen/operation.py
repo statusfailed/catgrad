@@ -1,10 +1,10 @@
+""" Generate python expressions for each operation in catgrad.core.operation """
 import ast
-from typing import Type, Any, List, Tuple, Callable
+from typing import Type, List, Tuple, Callable
 
-from catgrad.signature import Dtype, NdArrayType, obj
+from catgrad.signature import Dtype
 import catgrad.core.operation as ops
 from catgrad.target.ast import *
-from catgrad.target.python.array_backend import Numpy
 
 ################################################################################
 # Helpers
@@ -22,6 +22,19 @@ def load(i: int):
 def store(i: int):
     return ast.Name(name_id(i), ctx=ast.Store())
 
+def expr_lhs(apply: Apply):
+    """ Return the LHS (targets) of an assignment as an AST.
+    For example, when ``apply`` has lhs [x0, x1, x2], this will return a tuple
+    (x0, x1, x2) with context Store.
+    """
+    if len(apply.lhs) == 0:
+        return []
+    elif len(apply.lhs) == 1:
+        lhs = store(apply.lhs[0])
+    else:
+        lhs = ast.Tuple(elts=[ store(i) for i in apply.lhs ], ctx=ast.Store())
+    return lhs
+
 def expr(fn: Callable[[Apply, List[ast.Name]], ast.expr]) -> Callable[[Apply], List[ast.Assign]]:
     """ A decorator to turn a function of type
     ``Apply → ast.expr``
@@ -29,13 +42,7 @@ def expr(fn: Callable[[Apply, List[ast.Name]], ast.expr]) -> Callable[[Apply], L
     ``Apply → List[ast.Assign]``
     """
     def expr_wrapper(apply: Apply):
-        if len(apply.lhs) == 0:
-            return []
-        elif len(apply.lhs) == 1:
-            lhs = store(apply.lhs[0])
-        else:
-            lhs = ast.Tuple(elts=[ store(i) for i in apply.lhs ], ctx=ast.Store())
-
+        lhs = expr_lhs(apply)
         args = [ load(i) for i in apply.rhs ]
         expr = fn(apply, args)
         return [ast.Assign(targets=[lhs], value=expr)]
@@ -152,6 +159,7 @@ def permute(a: Apply, args: List[ast.Name]) -> ast.Call:
 # Handlers for each operation
 # Each function here takes an Assignment ....
 OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
+    # core operations
     ops.Copy: copy,
     ops.NCopy: ncopy,
     ops.Discard: discard,
@@ -169,82 +177,3 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Permute: permute,
     ops.Gt: comparison(ast.Gt()),
 }
-
-################################################################################
-# Helpers to make python definitions
-
-def _mk_arguments(names: List[ast.Name]):
-    return ast.arguments(args=[ ast.arg(n) for n in names ], posonlyargs=[], kwonlyargs=[], kw_defaults=[], defaults=[])
-
-def _mk_module(name: str, fn_defs: List[ast.FunctionDef]) -> ast.Module:
-    _assert_identifier(name)
-    backend_assign = ast.AnnAssign(
-        target=ast.Name(id='backend', ctx=ast.Store()),
-        annotation=ast.Name(id='ArrayBackend', ctx=ast.Load()),
-        simple=1)
-
-    body = [backend_assign] + fn_defs
-
-    dc_import = ast.ImportFrom(module='dataclasses', names=[ast.alias(name='dataclass')], level=0)
-    cg_import = ast.ImportFrom(module='catgrad.signature', names=[ast.alias(name='Dtype')], level=0)
-    ab_import = ast.ImportFrom(module='catgrad.target.python.array_backend', names=[ast.alias(name='ArrayBackend')], level=0)
-    class_def = ast.ClassDef(
-            name=name,
-            bases=[],
-            keywords=[],
-            body=body,
-            decorator_list=[ast.Name(id="dataclass", ctx=ast.Load())],
-            type_params=[])
-
-    return ast.Module(body=[dc_import, cg_import, ab_import, class_def], type_ignores=[])
-
-def _mk_function_definition(f: OpenHypergraph, name: str = 'fn', op_handlers=OP_HANDLERS) -> ast.FunctionDef:
-    _assert_identifier(name)
-
-    # Get a catgrad FunctionDefinition
-    fn = FunctionDefinition.from_open_hypergraph(f)
-
-    # create a python FunctionDef
-    args = _mk_arguments(["self"] + [name_id(i) for i in fn.args])
-    body = []
-    for apply in fn.body:
-        op_type = type(apply.op)
-        op_handler = op_handlers.get(op_type)
-        if not op_handler:
-            raise ValueError(f"Unknown op {op_type}")
-        body.extend(op_handler(apply))
-
-    rval = ast.List(elts=[ load(i) for i in fn.returns ], ctx=ast.Load())
-    body.append(ast.Return(value=rval, ctx=ast.Load()))
-    return ast.FunctionDef(
-        name = name,
-        args = args,
-        body = body,
-        decorator_list=[],
-        type_params=[])
-
-def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
-    fn_defs = {}
-    for name, f in fs.items():
-        _assert_identifier(name)
-        fn_defs[name] = _mk_function_definition(f, name)
-    mod_ast = _mk_module(class_name, list(fn_defs.values()))
-    ast.fix_missing_locations(mod_ast)
-    return mod_ast
-
-def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
-    filename='<string>'
-    mod_ast = to_python_class_ast(fs, class_name)
-    env: Any = {}
-    exec(compile(mod_ast, filename=filename, mode='exec'), env)
-
-    # TODO: make tracebacks work properly for generated member functions.
-    return env[class_name]
-
-def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>', array_backend=Numpy) -> Callable:
-    # compile to a class
-    Dynamic = to_python_class({function_name: f}, 'Dynamic')
-
-    # instantiate with numpy array backend and return closure over class
-    d = Dynamic(Numpy)
-    return (lambda *args: d.fn(*args))

@@ -27,7 +27,7 @@ class Dtype(Enum):
         return self.value in _FLOATING_DTYPES
 _FLOATING_DTYPES = { Dtype.float32.value }
 
-@dataclass
+@dataclass(frozen=True)
 class NdArrayType:
     """ An NdArrayType is the *metadata* for an N-dimensional array.
     It consists of a shape and a dtype, but not data.
