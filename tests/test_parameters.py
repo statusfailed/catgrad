@@ -3,7 +3,7 @@ import numpy as np
 
 from catgrad.combinators import *
 from catgrad.signature import *
-from catgrad.parameters import *
+from catgrad.special.parameter import *
 from catgrad.bidirectional.operation import *
 from catgrad.bidirectional.functor import Forget
 from catgrad.target.python import to_python_function
