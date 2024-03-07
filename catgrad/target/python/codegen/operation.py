@@ -66,7 +66,7 @@ def _call_backend(method: str, args) -> ast.Call:
     _assert_identifier(method)
     return ast.Call(
         func=ast.Attribute(
-            value=ast.Attribute(value=ast.Name(id='self', ctx=ast.Load()), attr='backend', ctx=ast.Load()),
+            value=ast.Attribute(value=ast.Name(id='self', ctx=ast.Load()), attr='_backend', ctx=ast.Load()),
             attr=method, ctx=ast.Load()),
         args=args, keywords=[])
 

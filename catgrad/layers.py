@@ -2,7 +2,7 @@
 from catgrad.signature import NdArrayType
 from catgrad.combinators import canonical
 from catgrad.bidirectional.operation import *
-from catgrad.parameters import parameter
+from catgrad.special.parameter import parameter
 
 def flatten(X: NdArrayType, Y: NdArrayType):
     return op(Reshape(X, Y))

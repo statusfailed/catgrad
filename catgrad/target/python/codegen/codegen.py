@@ -19,7 +19,7 @@ def _mk_arguments(names: List[ast.Name]):
 def _mk_module(name: str, fn_defs: List[ast.FunctionDef]) -> ast.Module:
     _assert_identifier(name)
     backend_assign = ast.AnnAssign(
-        target=ast.Name(id='backend', ctx=ast.Store()),
+        target=ast.Name(id='_backend', ctx=ast.Store()),
         annotation=ast.Name(id='ArrayBackend', ctx=ast.Load()),
         simple=1)
 
