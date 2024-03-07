@@ -278,8 +278,10 @@ def test_rd_sigmoid(Tx):
     rexpit = lambda x, dy: (expit(x) * (1 - expit(x)) * dy).astype(Numpy.dtype(T.dtype))
 
     assert_equal(arrow(x), [expit(x)], exact=False)
-    assert_equal(fwd(x), [expit(x), x], exact=False)
-    assert_equal(rev(x, dy), [rexpit(x, dy)], exact=False)
+    # NOTE: Sigmoid has a custom fwd map, where the *sigmoid* of the input is sent to the rev. map.
+    # This is so we don't have to compute it twice.
+    assert_equal(fwd(x), [expit(x), expit(x)], exact=False)
+    assert_equal(rev(*arrow(x), dy), [rexpit(x, dy)], exact=False)
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")

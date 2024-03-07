@@ -5,6 +5,7 @@ from open_hypergraphs import OpenHypergraph, FiniteFunction, IndexedCoproduct, F
 
 from catgrad.signature import NdArrayType, obj, op, sigma_0, sigma_1
 import catgrad.core.operation as ops
+import catgrad.core.definition as defs
 from catgrad.combinators import *
 
 class Optic:
@@ -188,27 +189,27 @@ class Sigmoid(Lens):
         if not self.T.dtype.is_floating():
             raise ValueError("Sigmoid is not defined for non-floating-point dtypes")
 
-    # TODO: tidy me
     def arrow(self):
-        # x → exp(x) / (1 + exp(x))     -- not stable
-        # x → 1 / (1 + exp(-x))         -- stable
-        T = self.T
-        U = NdArrayType((), T.dtype)
+        return op(defs.Sigmoid(self.T))
 
-        # the 1 constant at shape T
-        full1 = op(ops.Constant(T, 1))
-        inc = (full1 @ identity(obj(T))) >> op(ops.Add(T))
-
-        den = op(ops.Negate(T)) >> ops.exp1(T) >> inc
-        return (full1 @ den) >> op(ops.Divide(T))
+    def fwd(self):
+        # custom fwd: run sigmoid first, and propagate its value forward, since
+        # we never actually need the x value.
+        A = self.source()
+        return op(self) >> copy(A)
 
     def rev(self):
-        # TODO: implement arithmetic operations on arrows so we can write
         # σ * (1 - σ) * dy
+        #
+        #         /----------\
+        # σ(x) --●            *---\
+        #         \-- (1-) --/     *---
+        #                         /
+        # dy   ------------------/
         T = obj(self.T)
-        σ = op(self)
-        f = (constant(1)(T) @ σ) >> subtract(T) # 1 - σ
-        grad = copy(T) >> (σ @ f) >> multiply(T) # σ * (1 - σ)
+        id_T = identity(T)
+        dec_1 = (constant(1)(T) @ id_T) >> subtract(T) # 1 - x
+        grad = copy(T) >> (id_T @ dec_1) >> multiply(T) # σ * (1 - σ)
         return (grad @ identity(T)) >> multiply(T) # σ * (1 - σ) * dy
 
 sigmoid = canonical(lambda T: op(Sigmoid(T)))
