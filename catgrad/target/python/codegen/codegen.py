@@ -6,6 +6,7 @@ from open_hypergraphs import OpenHypergraph
 from catgrad.special.definition import Definition
 
 from catgrad.target.ast import FunctionDefinition
+from catgrad.target.python.special import PythonOp, _extract_python_ops
 from catgrad.target.python.codegen.operation import _assert_identifier, name_id, load, OP_HANDLERS
 from catgrad.target.python.codegen.definition import _extract_definitions, definition
 from catgrad.target.python.array_backend.numpy import Numpy
@@ -38,7 +39,7 @@ def _mk_module(name: str, fn_defs: List[ast.FunctionDef]) -> ast.Module:
 
     return ast.Module(body=[dc_import, cg_import, ab_import, class_def], type_ignores=[])
 
-def _mk_function_definition(f: OpenHypergraph, def_symbols: dict[Definition, str], name: str = 'fn', op_handlers=OP_HANDLERS) -> ast.FunctionDef:
+def _mk_function_definition(f: OpenHypergraph, def_symbols: dict[Definition, str], name: str = 'fn', python_op_symbols=None, op_handlers=OP_HANDLERS) -> ast.FunctionDef:
     _assert_identifier(name)
 
     # Get a catgrad FunctionDefinition
@@ -56,6 +57,11 @@ def _mk_function_definition(f: OpenHypergraph, def_symbols: dict[Definition, str
         if issubclass(op_type, Definition):
             d = definition(apply, def_symbols[apply.op])
             body.extend(d)
+        elif issubclass(op_type, PythonOp):
+            assert not python_op_symbols is None, "compiler error: python_op_symbols not passed to _mk_function_definition"
+            symbol = python_op_symbols[apply.op]
+            d = definition(apply, symbol)
+            body.extend(d)
         else:
             op_handler = op_handlers.get(op_type)
             if not op_handler:
@@ -72,7 +78,7 @@ def _mk_function_definition(f: OpenHypergraph, def_symbols: dict[Definition, str
         type_params=[])
 
 
-def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
+def _to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic', python_op_symbols=None):
     # TODO: how do we allow the user to specify additional imports?
     # get each Definition operation as an OpenHypergraph with a private name
 
@@ -92,20 +98,38 @@ def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynami
     # create function definitions for each class
     fn_defs = {}
     for name, f in fs.items():
-        fn_defs[name] = _mk_function_definition(f, def_symbols, name=name)
+        fn_defs[name] = _mk_function_definition(f, def_symbols, name=name, python_op_symbols=python_op_symbols)
 
     mod_ast = _mk_module(class_name, list(fn_defs.values()))
     ast.fix_missing_locations(mod_ast)
     return mod_ast
 
+def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
+    # This function prevents users from calling _to_python_class_ast when
+    # ``PythonOp``s are present: these are not added to the AST, so only work
+    # correctly with to_python_class (and not to_python_class_ast).
+    python_ops = [ x for f in fs.values() for x in f.H.x if isinstance(x, PythonOp) ]
+    if len(python_ops) > 0:
+        raise ValueError("cannot compile OpenHypergraph with PythonOp to AST")
+    return _to_python_class_ast(fs, class_name)
+
 def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
     filename='<string>'
-    mod_ast = to_python_class_ast(fs, class_name)
+    # call unsafe _to_python_class_ast because we want to process *with* the ops.
+    python_ops = _extract_python_ops(fs)
+    mod_ast = _to_python_class_ast(fs, class_name, python_op_symbols = python_ops)
     env: Any = {}
     exec(compile(mod_ast, filename=filename, mode='exec'), env)
 
     # TODO: make tracebacks work properly for generated member functions.
-    return env[class_name]
+    Dynamic = env[class_name]
+
+    # incredibly cursed escape hatch: instead of actually turning PythonOps into
+    # AST, we just attach them to the class after.
+    for x, symbol in python_ops.items():
+        setattr(Dynamic, symbol, x)
+
+    return Dynamic
 
 def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>', array_backend=Numpy) -> Callable:
     # compile to a class
