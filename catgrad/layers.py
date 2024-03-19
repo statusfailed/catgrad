@@ -9,7 +9,7 @@ def flatten(X: NdArrayType, Y: NdArrayType):
 
 def linear(A: NdArrayType, B: NdArrayType, C: NdArrayType):
     if not (A.dtype == B.dtype and B.dtype == C.dtype):
-        raise ValueError("linear: dtypes must be equal, but got dtypes {A.dtype=} {B.dtype=} {C.dtype=}")
+        raise ValueError(f"linear: dtypes must be equal, but got dtypes {A.dtype=} {B.dtype=} {C.dtype=}")
     return (identity(obj(A+B)) @ parameter(obj(B+C))) >> op(Compose(A,B,C))
 
 def bias(A: NdArrayType):
