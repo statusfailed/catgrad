@@ -20,7 +20,7 @@ class Optic:
     # Map this Optic into its underlying array operations
     # e.g., Sigmoid will map to exp / (1 + exp)
     @abstractmethod
-    def arrow(self) -> OpenHypergraph:
+    def to_core(self) -> OpenHypergraph:
         ...
 
     # Optic structure
@@ -67,61 +67,61 @@ class Dagger(Optic):
 # basic operations as optics
 
 class Copy(ops.Copy, Dagger):
-    def arrow(self): return op(ops.Copy(self.T))
+    def to_core(self): return op(ops.Copy(self.T))
     def dagger(self): return op(Add(self.T))
 
 class NCopy(ops.NCopy, Dagger):
-    def arrow(self): return op(ops.NCopy(self.N, self.T))
+    def to_core(self): return op(ops.NCopy(self.N, self.T))
     def dagger(self): return op(NAdd(self.N, self.T))
 
 class Discard(ops.Discard, Dagger):
-    def arrow(self): return op(ops.Discard(self.T))
+    def to_core(self): return op(ops.Discard(self.T))
     def dagger(self):
         return op(Constant(self.T, 0))
 
 class Add(ops.Add, Dagger):
-    def arrow(self): return op(ops.Add(self.T))
+    def to_core(self): return op(ops.Add(self.T))
     def dagger(self): return op(Copy(self.T))
 
 class NAdd(ops.NAdd, Dagger):
-    def arrow(self): return op(ops.NAdd(self.N, self.T))
+    def to_core(self): return op(ops.NAdd(self.N, self.T))
     def dagger(self): return op(NCopy(self.N, self.T))
 
 class Subtract(ops.Add, Dagger):
-    def arrow(self): return op(ops.Subtract(self.T))
+    def to_core(self): return op(ops.Subtract(self.T))
     def dagger(self):
         T = obj(self.T)
         return copy(T) >> (identity(T) @ negate(T))
 
 class Negate(ops.Negate, Dagger):
-    def arrow(self): return op(ops.Negate(self.T))
+    def to_core(self): return op(ops.Negate(self.T))
     def dagger(self): return op(self)
 
 class Invert(ops.Invert, Dagger):
-    def arrow(self): return op(ops.Invert(self.T))
+    def to_core(self): return op(ops.Invert(self.T))
     def dagger(self): return op(self)
 
 class Constant(ops.Constant, Dagger):
-    def arrow(self): return op(ops.Constant(self.T, self.x))
+    def to_core(self): return op(ops.Constant(self.T, self.x))
     def dagger(self): return op(Discard(self.T))
 
 class Reshape(ops.Reshape, Dagger):
-    def arrow(self): return op(ops.Reshape(self.X, self.Y))
+    def to_core(self): return op(ops.Reshape(self.X, self.Y))
     def dagger(self): return op(Reshape(self.Y, self.X))
 
 class Permute(ops.Permute, Dagger):
-    def arrow(self): return op(ops.Permute(self.T, self.p))
+    def to_core(self): return op(ops.Permute(self.T, self.p))
     def dagger(self): return op(Permute(self.T, np.argsort(self.p).tolist()))
 
 class Gt(ops.Gt, Optic):
-    def arrow(self): return op(ops.Gt(self.T))
+    def to_core(self): return op(ops.Gt(self.T))
     def residual(self): return obj()
     def fwd(self): return op(self)
     def rev(self):
         return op(Discard(self.T)) >> zero(obj(self.T, self.T))
 
 class Multiply(ops.Multiply, Lens):
-    def arrow(self): return op(ops.Multiply(self.T))
+    def to_core(self): return op(ops.Multiply(self.T))
     def rev(self):
         T = obj(self.T)
         mul = op(self)
@@ -132,7 +132,7 @@ class Multiply(ops.Multiply, Lens):
 
 class Compose(ops.Compose, Lens):
     """ Tensor composition (diagrammatic order) """
-    def arrow(self): return op(ops.Compose(self.A, self.B, self.C))
+    def to_core(self): return op(ops.Compose(self.A, self.B, self.C))
     def rev(self):
         A, B, C = self.A, self.B, self.C
         t_AB = FiniteFunction.twist(len(B.shape), len(A.shape)).table.tolist()
@@ -189,7 +189,7 @@ class Sigmoid(Lens):
         if not self.T.dtype.is_floating():
             raise ValueError("Sigmoid is not defined for non-floating-point dtypes")
 
-    def arrow(self):
+    def to_core(self):
         return op(defs.Sigmoid(self.T))
 
     def fwd(self):
@@ -226,7 +226,7 @@ class SGD(Lens):
     c: ops.scalar
     def source(self): return obj(self.T)
     def target(self): return obj(self.T)
-    def arrow(self): return identity(obj(self.T))
+    def to_core(self): return identity(obj(self.T))
     def rev(self):
         T = obj(self.T)
         return (identity(T) @ scale(self.c)(T)) >> subtract(T)
@@ -239,7 +239,7 @@ class MSE(Lens):
     T: NdArrayType
     def source(self): return obj(self.T)
     def target(self): return obj(self.T)
-    def arrow(self): return identity(obj(self.T))
+    def to_core(self): return identity(obj(self.T))
     def rev(self): return subtract(obj(self.T))
 
 mse = canonical(lambda T: op(MSE(T)))

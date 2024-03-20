@@ -25,7 +25,7 @@ def test_rd_copy(Tx: np.ndarray):
     T, [x, y] = Tx
 
     e = Copy(T)
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -39,7 +39,7 @@ def test_rd_ncopy(TxN):
     (T, [x]), N = TxN
     e = NCopy(N, T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -57,7 +57,7 @@ def test_rd_discard(Tx: np.ndarray):
     T, [x] = Tx
 
     e = Discard(T)
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -74,7 +74,7 @@ def test_rd_add(Tx):
 
     e = Add(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -93,7 +93,7 @@ def test_rd_nadd(Tx: np.ndarray):
     N = NdArrayType((len(xs),), T.dtype)
     e = NAdd(N, T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -112,7 +112,7 @@ def test_rd_subtract(Tx):
 
     e = Subtract(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -129,7 +129,7 @@ def test_rd_negate(Tx):
 
     e = Negate(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -144,7 +144,7 @@ def test_rd_invert(Tx):
 
     e = Invert(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -159,7 +159,7 @@ def test_rd_constant(Tx: np.ndarray):
 
     e = Constant(T, x.item())
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -176,7 +176,7 @@ def test_rd_multiply(Tx: np.ndarray):
 
     e = Multiply(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -194,7 +194,7 @@ def test_rd_compose(ABCxy: np.ndarray):
     dy = np.ones((A+C).shape, Numpy.dtype(A.dtype))
     e = Compose(A, B, C)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -219,7 +219,7 @@ def test_rd_reshape(XYx):
     X, Y, x = XYx
     e = Reshape(X, Y)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -234,7 +234,7 @@ def test_rd_permute(p_x: Tuple[ops.Permute, np.ndarray]):
     p, (_, [x]) = p_x
     e = Permute(p.T, p.p) # "upcast" to rdop
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -252,7 +252,7 @@ def test_rd_gt(Tx):
 
     e = Gt(T)
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd   = to_python_function(F(e.fwd()))
     rev   = to_python_function(F(e.rev()))
 
@@ -270,7 +270,7 @@ def test_rd_sigmoid(Tx):
 
     e = Sigmoid(NdArrayType((), Dtype.float32))
 
-    arrow = to_python_function(e.arrow())
+    arrow = to_python_function(e.to_core())
     fwd = to_python_function(F(e.fwd()))
     rev = to_python_function(F(e.rev()))
 

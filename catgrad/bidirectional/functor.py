@@ -10,7 +10,7 @@ class Forget(FrobeniusFunctor):
 
     def map_operations(self, x: FiniteFunction, sources: IndexedCoproduct, targets: IndexedCoproduct) -> OpenHypergraph:
         # we lose a lot of speed here using tensor_list, but it's simpler code
-        fs = [ x.arrow() for x in x.table ]
+        fs = [ x.to_core() for x in x.table ]
         return self.OpenHypergraph().tensor_list(fs, sigma_0, sigma_1)
 
 # Map rdops to their fwd maps
