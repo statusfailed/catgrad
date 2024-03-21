@@ -1,5 +1,7 @@
 """ Definitions """
 
+from typing import List, Set
+from dataclasses import dataclass
 from abc import abstractmethod
 from open_hypergraphs import FiniteFunction, IndexedCoproduct, OpenHypergraph, FrobeniusFunctor
 from catgrad.signature import sigma_0, sigma_1
@@ -48,3 +50,47 @@ def inline(f: OpenHypergraph) -> OpenHypergraph:
     """ inline all the definitions in a morphism by expanding them. """
     I = Inline()
     return I(f)
+
+
+# A Definition is explicitly recursive when it (eventually) expands to itself.
+# Note that this does not catch all types of recursion: for example, a definition like
+#
+#   class Recursive(Definition):
+#       i: int
+#       def arrow():
+#           return op(Recursive(self.i + 1))
+#
+# ... and so we have to have a max_depth parameter to prevent unbounded recursion
+def recursive_extract_definitions(defs: Set[Definition], max_depth=1024) -> dict[Definition, OpenHypergraph]:
+    stack = [ (d, 1) for d in defs ]
+    path = []
+    result = {}
+
+    while len(stack) > 0:
+        node, depth = stack.pop()
+        path = path[:depth-1] # ancestors of this node; truncate deeper paths.
+
+        # process the node
+        if depth > max_depth:
+            raise ValueError("Maximum recursion depth exceeded")
+
+        # if we've already extracted this definition, skip it.
+        if node in result:
+            continue
+
+        # check for recursion
+        if node in path:
+            raise ValueError("Recursion detected")
+
+        arrow = node.arrow()
+        result[node] = arrow
+
+        # recurse (add children to stack)
+        path.append(node)
+        children = _arrow_to_definitions(arrow)
+        stack.extend( (c, depth+1) for c in children )
+
+    return result
+
+def _arrow_to_definitions(f: OpenHypergraph) -> Set[Definition]:
+    return set( x for x in f.H.x if isinstance(x, Definition) )

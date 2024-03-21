@@ -1,5 +1,5 @@
 from catgrad.signature import Dtype, op
-from catgrad.core.definition import Sigmoid
+from catgrad.bidirectional.operation import Sigmoid
 from catgrad.core.operation import Add, Negate
 
 from catgrad.special.definition import inline

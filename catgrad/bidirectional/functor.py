@@ -37,4 +37,8 @@ class Bidirectional(Optic):
     R = Rev()
 
     def residual(self, x: FiniteFunction, A: IndexedCoproduct, B: IndexedCoproduct) -> IndexedCoproduct:
-        return IndexedCoproduct.from_list(None, [op.residual() for op in x], dtype=object)
+        # NOTE: we don't need the types of operations to calculate the residual
+        return residual(x)
+
+def residual(x: FiniteFunction):
+    return IndexedCoproduct.from_list(None, [op.residual() for op in x], dtype=object)

@@ -5,7 +5,7 @@ from open_hypergraphs import OpenHypergraph, FiniteFunction, IndexedCoproduct, F
 
 from catgrad.signature import NdArrayType, obj, op, sigma_0, sigma_1
 import catgrad.core.operation as ops
-import catgrad.core.definition as defs
+from catgrad.special.definition import Definition
 from catgrad.combinators import *
 
 class Optic:
@@ -179,8 +179,8 @@ def gt_constant(c):
 ################################################################################
 # Other definitions
 
-@dataclass
-class Sigmoid(Lens):
+@dataclass(frozen=True)
+class Sigmoid(Definition, Lens):
     T: NdArrayType
     def source(self): return obj(self.T)
     def target(self): return obj(self.T)
@@ -189,15 +189,41 @@ class Sigmoid(Lens):
         if not self.T.dtype.is_floating():
             raise ValueError("Sigmoid is not defined for non-floating-point dtypes")
 
+    ########################################
+    # Sigmoid as a Core definition
+
+    # The definition of the Sigmoid function in terms of Core ops
+    def arrow(self):
+        # here we write a morphism in *core*!
+        T = self.T
+        U = NdArrayType((), T.dtype)
+
+        full1 = op(ops.Constant(T, 1))
+
+        # inc(x) := 1 + x
+        inc = (full1 @ identity(obj(T))) >> op(ops.Add(T))
+
+        # den(x) := 1 + exp(-x)
+        den = op(ops.Negate(T)) >> ops.exp1(T) >> inc
+
+        #      1
+        # -----------
+        # 1 + exp(-x)
+        return (full1 @ den) >> op(ops.Divide(T))
+
+    ########################################
+    # Sigmoid as an Optic
+
+    # we want this to appear as a Definition in core, so we just return the op
+    # as a singleton diagram.
     def to_core(self):
-        return op(defs.Sigmoid(self.T))
+        return op(self)
 
+    # The forward map is like Lens, but we copy the *output*, not the input.
     def fwd(self):
-        # custom fwd: run sigmoid first, and propagate its value forward, since
-        # we never actually need the x value.
-        A = self.source()
-        return op(self) >> copy(A)
+        return op(self) >> copy(self.source())
 
+    # The reverse map is σ(x) · (1 - σ(x)) · dy
     def rev(self):
         # σ * (1 - σ) * dy
         #
