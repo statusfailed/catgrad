@@ -55,7 +55,8 @@ def test_nadd(Tx: np.ndarray):
 
     x = np.stack(xs)
     actual = f(x)
-    expected = [x.sum(axis=0)] # TODO: more dims
+    dims = tuple( -(i+1) for i in reversed(range(len(T.shape))) )
+    expected = [x.sum(dims)] # TODO: more dims
     assert_equal(actual, expected)
 
 @pytest.mark.filterwarnings("ignore:overflow")

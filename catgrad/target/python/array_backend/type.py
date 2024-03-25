@@ -40,7 +40,7 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
-    def nadd(shape: Tuple, x: A) -> A:
+    def nadd(dims: Tuple, x: A) -> A:
         ...
 
     @staticmethod

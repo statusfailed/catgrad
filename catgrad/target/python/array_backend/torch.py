@@ -21,8 +21,8 @@ class Torch:
         return torch.broadcast_to(x, (*shape, *x.shape))
 
     @staticmethod
-    def nadd(shape: Tuple, x: torch.tensor) -> torch.tensor:
-        return x.sum(tuple(range(len(shape))))
+    def nadd(dims: Tuple, x: torch.tensor) -> torch.tensor:
+        return x.sum(dims)
 
     @staticmethod
     def reshape(x: torch.tensor, shape: Tuple) -> torch.tensor:

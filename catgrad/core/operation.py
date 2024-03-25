@@ -25,7 +25,7 @@ class Copy:
 class NCopy:
     # TODO: introduce split/join and mention naturality of Broadcast w.r.t. them.
     """ NCopy is like Copy, but on tensor dimensions.
-    ``NCopy(N,A) : A → N+A`` is like the N-fold copy of a tensor of shape A, then packed into a tensor.
+    ``NCopy(N,T) : T → N+T`` is like the N-fold copy of a tensor of shape A, then packed into a tensor.
     """
     N: NdArrayType
     T: NdArrayType
@@ -46,11 +46,11 @@ class Add:
 
 @dataclass
 class NAdd:
-    """ ``NAdd(N, T)`` sums a tensor of type N + T over the N dimensions. """
+    """ ``NAdd(N, T) : N×T → N`` sums a tensor of type N + T over the T dimensions. """
     N: NdArrayType
     T: NdArrayType
     def source(self): return obj(self.N + self.T)
-    def target(self): return obj(self.T)
+    def target(self): return obj(self.N)
 
 @dataclass
 class Negate:

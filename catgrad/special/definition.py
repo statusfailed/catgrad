@@ -22,10 +22,10 @@ class Definition:
 
     # TODO: cache these? bit slow innit.
     def source(self) -> FiniteFunction:
-        return self.arrow().source()
+        return self.arrow().source
 
     def target(self) -> FiniteFunction:
-        return self.arrow().target()
+        return self.arrow().target
 
     @abstractmethod
     def arrow(self) -> OpenHypergraph:

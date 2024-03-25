@@ -136,5 +136,5 @@ def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<
     Dynamic = to_python_class({function_name: f}, 'Dynamic')
 
     # instantiate with numpy array backend and return closure over class
-    d = Dynamic(Numpy)
+    d = Dynamic(array_backend)
     return (lambda *args: d.fn(*args))

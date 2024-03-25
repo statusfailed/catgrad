@@ -12,8 +12,6 @@ from catgrad.bidirectional.functor import Forget
 
 F = Forget()
 
-from hypothesis import settings, reproduce_failure
-@settings(print_blob=True)
 @given(strategies.objects_and_values(copy))
 def test_object_copy(Xcv):
     X, c, v = Xcv

@@ -22,8 +22,8 @@ class Numpy:
         return np.broadcast_to(x, (*shape, *x.shape))
 
     @staticmethod
-    def nadd(shape: Tuple, x: np.ndarray) -> np.ndarray:
-        return x.sum(tuple(range(len(shape))))
+    def nadd(dims: Tuple, x: np.ndarray) -> np.ndarray:
+        return x.sum(dims)
 
     @staticmethod
     def reshape(x: np.ndarray, shape: Tuple) -> np.ndarray:

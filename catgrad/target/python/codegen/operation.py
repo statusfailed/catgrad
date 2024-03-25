@@ -95,7 +95,9 @@ def ncopy(a: Apply, args: List[ast.Name]) -> ast.expr:
 def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.NAdd
     assert len(args) == 1
-    return _call_backend('nadd', [ast.Constant(value=a.op.N.shape), args[0]])
+    # dimensions should be e.g., (-3, -2, -1) for
+    dims = tuple( -(i+1) for i in reversed(range(len(a.op.T.shape))) )
+    return _call_backend('nadd', [ast.Constant(value=dims), args[0]])
 
 @expr
 def negate(a: Apply, args: List[ast.Name]) -> ast.expr:

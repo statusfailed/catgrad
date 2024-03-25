@@ -48,7 +48,9 @@ def test_rd_ncopy(TxN):
 
     assert_equal(arrow(x), [expected_y])
     assert_equal(fwd(x), [expected_y])
-    assert_equal(rev(dy), [Numpy.nadd(N.shape, dy)])
+
+    dims = tuple( -(i+1) for i in reversed(range(len(T.shape))) )
+    assert_equal(rev(dy), [Numpy.nadd(dims, dy)])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
@@ -98,8 +100,10 @@ def test_rd_nadd(Tx: np.ndarray):
     rev   = to_python_function(F(e.rev()))
 
     dy = np.ones((T).shape) # TODO: generate
-    expected_y = Numpy.nadd(N.shape, x)
+    dims = tuple( -(i+1) for i in reversed(range(len(T.shape))) )
+    expected_y = Numpy.nadd(dims, x)
 
+    assert arrow(x)[0].shape == N.shape
     assert_equal(arrow(x), [expected_y])
     assert_equal(fwd(x), [expected_y])
     assert_equal(rev(dy), [Numpy.ncopy(N.shape, dy)])
