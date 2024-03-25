@@ -19,7 +19,7 @@ class Numpy:
 
     @staticmethod
     def ncopy(shape: Tuple, x: np.ndarray) -> np.ndarray:
-        return np.broadcast_to(x, (*shape, *x.shape))
+        return np.broadcast_to(x.reshape(x.shape + (1,)*len(shape)), x.shape + shape)
 
     @staticmethod
     def nadd(dims: Tuple, x: np.ndarray) -> np.ndarray:

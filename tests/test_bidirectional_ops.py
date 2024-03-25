@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import integral_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
+from tests.strategies import integral_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType, Dtype
@@ -35,8 +35,8 @@ def test_rd_copy(Tx: np.ndarray):
     assert_equal(rev(x, y), [x + y])
 
 @given(ncopy_args())
-def test_rd_ncopy(TxN):
-    (T, [x]), N = TxN
+def test_rd_ncopy(NxT):
+    (N, [x]), T = NxT
     e = NCopy(N, T)
 
     arrow = to_python_function(e.to_core())
@@ -44,7 +44,8 @@ def test_rd_ncopy(TxN):
     rev   = to_python_function(F(e.rev()))
 
     dy = np.ones((N+T).shape) # TODO: generate
-    expected_y = np.broadcast_to(x, (N+T).shape)
+    # expected_y = np.broadcast_to(x, (N+T).shape)
+    expected_y = np.broadcast_to(x.reshape(N.shape + (1,)*len(T.shape)), N.shape + T.shape)
 
     assert_equal(arrow(x), [expected_y])
     assert_equal(fwd(x), [expected_y])
@@ -87,12 +88,9 @@ def test_rd_add(Tx):
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
-@given(ndarrays())
-def test_rd_nadd(Tx: np.ndarray):
-    # TODO: test more than a single extra dimension!
-    T, xs = Tx
-    x = np.stack(xs)
-    N = NdArrayType((len(xs),), T.dtype)
+@given(nadd_args())
+def test_rd_nadd(NTx: np.ndarray):
+    N, T, x = NTx
     e = NAdd(N, T)
 
     arrow = to_python_function(e.to_core())
@@ -106,7 +104,7 @@ def test_rd_nadd(Tx: np.ndarray):
     assert arrow(x)[0].shape == N.shape
     assert_equal(arrow(x), [expected_y])
     assert_equal(fwd(x), [expected_y])
-    assert_equal(rev(dy), [Numpy.ncopy(N.shape, dy)])
+    assert_equal(rev(dy), [Numpy.ncopy(T.shape, dy)])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")

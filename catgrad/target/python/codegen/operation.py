@@ -89,7 +89,7 @@ def discard(a: Apply) -> List[ast.Assign]:
 def ncopy(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.NCopy
     assert len(args) == 1
-    return _call_backend('ncopy', [ast.Constant(value=a.op.N.shape), args[0]])
+    return _call_backend('ncopy', [ast.Constant(value=a.op.T.shape), args[0]])
 
 @expr
 def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:

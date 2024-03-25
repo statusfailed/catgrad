@@ -20,12 +20,12 @@ def test_copy(Tx: np.ndarray):
     assert_equal(f(x), [x, x])
 
 @given(ncopy_args())
-def test_ncopy(TxN):
-    (T, [x]), N = TxN
+def test_ncopy(NxT):
+    (N, [x]), T = NxT
     f = to_python_function(op(NCopy(N, T)))
 
     actual = f(x)
-    expected = [np.broadcast_to(x, (N+T).shape)]
+    expected = [np.broadcast_to(x.reshape(N.shape + (1,)*len(T.shape)), (N+T).shape)]
     assert_equal(actual, expected)
 
 @given(ndarrays())

@@ -18,7 +18,7 @@ class Torch:
 
     @staticmethod
     def ncopy(shape: Tuple, x: torch.tensor) -> torch.tensor:
-        return torch.broadcast_to(x, (*shape, *x.shape))
+        return torch.broadcast_to(x.reshape(x.shape + (1,)*len(shape)), x.shape + shape)
 
     @staticmethod
     def nadd(dims: Tuple, x: torch.tensor) -> torch.tensor:

@@ -81,6 +81,17 @@ def ncopy_args(draw):
     N = draw(ndarraytypes(shape=shapes(max_elements=st.just(1000)), dtype=st.just(dt)))
     return (T, [x]), N
 
+@st.composite
+def nadd_args(draw):
+    dt = draw(dtypes)
+    N = draw(shapes(max_elements=st.just(1000)))
+    T = draw(shapes(max_elements=st.just(1000)))
+    NT, [x] = draw(ndarrays(array_type=ndarraytypes(shape=st.just(N+T), dtype=st.just(dt))))
+
+    N = NdArrayType(N, dt)
+    T = NdArrayType(T, dt)
+    return (N, T, x)
+
 ################################################################################
 # generators for ops
 
