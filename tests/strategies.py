@@ -17,6 +17,7 @@ import catgrad.core.operation as ops
 # because negate is not supported.
 dtypes = st.sampled_from([Dtype.int32, Dtype.float32])
 integral_dtypes = st.sampled_from([Dtype.int32, Dtype.bool])
+floating_dtypes = st.sampled_from([Dtype.float32])
 
 MAX_ELEMENTS = 1_000_000
 @st.composite

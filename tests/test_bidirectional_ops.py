@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import integral_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args
+from tests.strategies import integral_dtypes, floating_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType, Dtype
@@ -154,6 +154,23 @@ def test_rd_invert(Tx):
     assert_equal(arrow(x), [~x])
     assert_equal(fwd(x), [~x])
     assert_equal(rev(dy), [~dy])
+
+@given(ndarrays(n=2, array_type=ndarraytypes(dtype=floating_dtypes)))
+def test_rd_scale_inverse(Tx):
+    T, [x, dy] = Tx
+    s = 199.0 # TODO: generate a random floating point constant
+
+    e = ScaleInverse(T, s)
+
+    arrow = to_python_function(e.to_core())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    s = np.array(199.0, dtype=x.dtype) # cast to correct dtype before comparing
+    assert_equal(arrow(x), [x/s])
+    assert_equal(fwd(x), [x/s])
+    assert_equal(rev(dy), [dy/s])
 
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_rd_constant(Tx: np.ndarray):

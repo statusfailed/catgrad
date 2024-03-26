@@ -130,6 +130,21 @@ class Multiply(ops.Multiply, Lens):
         rhs = mul @ mul
         return lhs >> mid >> rhs
 
+# Scale by the reciprocal of a scalar. Maps to division, but it's a Dagger
+@dataclass
+class ScaleInverse(Dagger):
+    T: NdArrayType
+    s: ops.scalar
+
+    def __post_init__(self): assert self.s != 0
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+
+    def to_core(self):
+        return (identity(obj(self.T)) @ op(ops.Constant(self.T, self.s))) >> op(ops.Divide(self.T))
+    def dagger(self):
+        return op(self)
+
 class Compose(ops.Compose, Lens):
     """ Tensor composition (diagrammatic order) """
     def to_core(self): return op(ops.Compose(self.A, self.B, self.C))
@@ -160,11 +175,16 @@ multiply = canonical(lambda T: op(Multiply(T)))
 def constant(c):
     return canonical(lambda T: op(Constant(T, c)))
 
-# multiply by a constant
 def scale(c):
+    """ multiply by a constant """
     def scale_wrapper(A: FiniteFunction):
         return (constant(c)(A) @ identity(A)) >> multiply(A)
     return scale_wrapper
+
+def scale_inverse(s):
+    """ divide by a constant """
+    scale_inverse_wrapper = canonical(lambda T: op(ScaleInverse(T, s)))
+    return scale_inverse_wrapper
 
 ########################################
 # comparators

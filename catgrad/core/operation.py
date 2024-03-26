@@ -29,7 +29,7 @@ class NCopy:
     """
     N: NdArrayType
     T: NdArrayType
-    def source(self): return obj(self.T)
+    def source(self): return obj(self.N)
     def target(self): return obj(self.N + self.T)
 
 @dataclass
