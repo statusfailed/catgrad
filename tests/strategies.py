@@ -93,6 +93,23 @@ def nadd_args(draw):
     T = NdArrayType(T, dt)
     return (N, T, x)
 
+@st.composite
+def nmax_args(draw):
+    dt = draw(dtypes)
+    N = draw(shapes(max_elements=st.just(1000)))
+    T = draw(shapes(max_elements=st.just(1000)))
+
+    if ops.prod(N) <= 0:
+        N = (1,)
+    if ops.prod(T) <= 0:
+        T = (1,)
+
+    NT, [x] = draw(ndarrays(array_type=ndarraytypes(shape=st.just(N+T), dtype=st.just(dt))))
+
+    N = NdArrayType(N, dt)
+    T = NdArrayType(T, dt)
+    return (N, T, x)
+
 ################################################################################
 # generators for ops
 

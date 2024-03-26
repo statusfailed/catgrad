@@ -44,6 +44,10 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
+    def nmax(dims: Tuple, x: A) -> A:
+        ...
+
+    @staticmethod
     def reshape(x: A, shape: Tuple) -> A:
         ...
 

@@ -53,6 +53,18 @@ class NAdd:
     def target(self): return obj(self.N)
 
 @dataclass
+class NMax:
+    """ ``NMax(N, T) : N×T → N`` returns the maximum of a tensor of type N + T over the T dimensions. """
+    N: NdArrayType
+    T: NdArrayType
+    def __post_init__(self):
+        if prod(self.N.shape + self.T.shape) <= 0:
+            raise ValueError(f"Cannot NMax zero-element vector: {self}")
+
+    def source(self): return obj(self.N + self.T)
+    def target(self): return obj(self.N)
+
+@dataclass
 class Negate:
     """ ``Negate(T) : T×T → T`` computes ``-x``. """
     T: NdArrayType

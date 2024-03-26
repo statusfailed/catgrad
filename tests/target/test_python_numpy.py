@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args
+from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nmax_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType
@@ -56,8 +56,23 @@ def test_nadd(Tx: np.ndarray):
     x = np.stack(xs)
     actual = f(x)
     dims = tuple( -(i+1) for i in reversed(range(len(T.shape))) )
-    expected = [x.sum(dims)] # TODO: more dims
+    expected = [x.sum(dims)]
     assert_equal(actual, expected)
+
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(nmax_args())
+def test_nmax(NTx: np.ndarray):
+    N, T, x = NTx
+
+    f = to_python_function(op(NMax(N, T)))
+
+    actual = f(x)
+    dims = tuple( -(i+1) for i in reversed(range(len(T.shape))) )
+    expected = [x.max(dims)] # TODO: more dims
+    assert_equal(actual, expected)
+
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")

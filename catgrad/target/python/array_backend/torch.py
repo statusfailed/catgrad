@@ -25,6 +25,10 @@ class Torch:
         return x.sum(dims)
 
     @staticmethod
+    def nmax(dims: Tuple, x: torch.tensor) -> torch.tensor:
+        return x.max(dims)
+
+    @staticmethod
     def reshape(x: torch.tensor, shape: Tuple) -> torch.tensor:
         return torch.reshape(x, shape)
 

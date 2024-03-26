@@ -100,6 +100,14 @@ def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     return _call_backend('nadd', [ast.Constant(value=dims), args[0]])
 
 @expr
+def nmax(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.NMax
+    assert len(args) == 1
+    # dimensions should be e.g., (-3, -2, -1) for
+    dims = tuple( -(i+1) for i in reversed(range(len(a.op.T.shape))) )
+    return _call_backend('nmax', [ast.Constant(value=dims), args[0]])
+
+@expr
 def negate(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.Negate
     assert len(args) == 1
@@ -167,6 +175,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,
+    ops.NMax: nmax,
     ops.Negate: negate,
     ops.Invert: invert,
     ops.Subtract: binop(ast.Sub()),

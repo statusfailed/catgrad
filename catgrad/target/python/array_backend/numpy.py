@@ -26,6 +26,10 @@ class Numpy:
         return x.sum(dims)
 
     @staticmethod
+    def nmax(dims: Tuple, x: np.ndarray) -> np.ndarray:
+        return x.max(dims)
+
+    @staticmethod
     def reshape(x: np.ndarray, shape: Tuple) -> np.ndarray:
         return np.reshape(x, shape)
 
