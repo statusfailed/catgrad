@@ -167,10 +167,34 @@ def test_rd_scale_inverse(Tx):
     rev   = to_python_function(F(e.rev()))
 
     # the fwd map is an optic with empty residual, so fwd = arrow
-    s = np.array(199.0, dtype=x.dtype) # cast to correct dtype before comparing
+    s = np.array(s, dtype=x.dtype) # cast to correct dtype before comparing
     assert_equal(arrow(x), [x/s])
     assert_equal(fwd(x), [x/s])
     assert_equal(rev(dy), [dy/s])
+
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(ndarrays(n=2, array_type=ndarraytypes(dtype=floating_dtypes)))
+def test_rd_exponentiate(Tx):
+    T, [x, dy] = Tx
+    s = -0.5 # TODO: generate a random floating point constant
+
+    # dodgy hack: avoid x == 0 because of division by zero
+    # TODO: This kinda sucks because now we need to deal with partial functions properly!
+    epsilon = 1e-06
+    x = np.where(x==0, x+epsilon, x)
+
+    e = Exponentiate(T, s)
+
+    arrow = to_python_function(e.to_core())
+    fwd   = to_python_function(F(e.fwd()))
+    rev   = to_python_function(F(e.rev()))
+
+    # the fwd map is an optic with empty residual, so fwd = arrow
+    s = np.array(s, dtype=x.dtype) # cast to correct dtype before comparing
+    assert_equal(arrow(x), [x**s])
+    assert_equal(fwd(x), [x**s, x])
+    assert_equal(rev(x, dy), [s*x**(s-1)*dy])
 
 @given(ndarrays(array_type=ndarraytypes(shape=st.just(()))))
 def test_rd_constant(Tx: np.ndarray):

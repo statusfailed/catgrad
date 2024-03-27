@@ -26,7 +26,8 @@ class Torch:
 
     @staticmethod
     def nmax(dims: Tuple, x: torch.tensor) -> torch.tensor:
-        return x.max(dims)
+        # TODO: FIXME: this doesn't work if dims aren't (-N, -(N+1), ...)
+        return x.flatten(start_dim=min(dims)).max(dim=-1).values
 
     @staticmethod
     def reshape(x: torch.tensor, shape: Tuple) -> torch.tensor:

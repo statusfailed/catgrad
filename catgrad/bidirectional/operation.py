@@ -145,6 +145,36 @@ class ScaleInverse(Dagger):
     def dagger(self):
         return op(self)
 
+@dataclass
+class Exponentiate(Lens):
+    T: NdArrayType
+    s: ops.scalar
+
+    def __post_init__(self):
+        if not self.T.dtype.is_floating():
+            raise ValueError("Exponentiate is not defined for non-floating-point dtypes")
+
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+
+    def to_core(self):
+        return (identity(obj(self.T)) @ op(ops.Constant(self.T, self.s))) >> op(ops.Power(self.T))
+    def rev(self):
+        X = obj(self.T)
+
+        #       <s|----\
+        #               ○---
+        # --[^(s-1)]---/
+        diff = op(Exponentiate(self.T, self.s-1)) >> scale(self.s)(X)
+
+        # --[diff]--\
+        #            ○---
+        # ----------/
+        rev = (diff @ identity(X)) >> multiply(X)
+
+        return rev
+
+
 class Compose(ops.Compose, Lens):
     """ Tensor composition (diagrammatic order) """
     def to_core(self): return op(ops.Compose(self.A, self.B, self.C))
