@@ -205,6 +205,12 @@ multiply = canonical(lambda T: op(Multiply(T)))
 def constant(c):
     return canonical(lambda T: op(Constant(T, c)))
 
+def increment(c):
+    """ increment by a constant """
+    def increment_wrapper(A: FiniteFunction):
+        return (constant(c)(A) @ identity(A)) >> add(A)
+    return increment_wrapper
+
 def scale(c):
     """ multiply by a constant """
     def scale_wrapper(A: FiniteFunction):
@@ -215,6 +221,12 @@ def scale_inverse(s):
     """ divide by a constant """
     scale_inverse_wrapper = canonical(lambda T: op(ScaleInverse(T, s)))
     return scale_inverse_wrapper
+
+def exponentiate(s):
+    """ exponentiate by a constant ``x^s`` """
+    exponentiate_wrapper = canonical(lambda T: op(Exponentiate(T, s)))
+    return exponentiate_wrapper
+
 
 ########################################
 # comparators
