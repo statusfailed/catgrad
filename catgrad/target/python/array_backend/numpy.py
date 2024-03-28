@@ -32,6 +32,12 @@ class Numpy:
         return result
 
     @staticmethod
+    def nconcatenate(xs: List[np.ndarray], k: int) -> List[np.ndarray]:
+        assert len(xs) == k
+        if k == 0: return None
+        return np.concatenate(xs, axis=-1)
+
+    @staticmethod
     def nadd(dims: Tuple, x: np.ndarray) -> np.ndarray:
         return x.sum(dims)
 

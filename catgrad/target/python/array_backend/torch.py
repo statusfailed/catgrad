@@ -31,6 +31,12 @@ class Torch:
         return result
 
     @staticmethod
+    def nconcatenate(xs: List[torch.tensor], k: int) -> List[torch.tensor]:
+        assert len(xs) == k
+        if k == 0: return None
+        return torch.concatenate(xs, axis=-1)
+
+    @staticmethod
     def nadd(dims: Tuple, x: torch.tensor) -> torch.tensor:
         return x.sum(dims)
 

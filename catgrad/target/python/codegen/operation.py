@@ -98,6 +98,14 @@ def nsplit(a: Apply, args: List[ast.Name]) -> ast.expr:
     return _call_backend('nsplit', [args[0], ast.Constant(value=a.op.k)])
 
 @expr
+def nconcatenate(a: Apply, args: List[ast.Name]) -> ast.expr:
+    # variadic; should have k arguments
+    assert type(a.op) == ops.NConcatenate
+    assert len(args) == a.op.k
+    var_args = ast.List(elts=args, ctx=ast.Load())
+    return _call_backend('nconcatenate', [var_args, ast.Constant(value=a.op.k)])
+
+@expr
 def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.NAdd
     assert len(args) == 1
@@ -179,6 +187,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Copy: copy,
     ops.NCopy: ncopy,
     ops.NSplit: nsplit,
+    ops.NConcatenate: nconcatenate,
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,

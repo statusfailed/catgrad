@@ -45,6 +45,23 @@ def test_nsplit(Tkx):
     expected = np.split(x, k, -1) # split the last axis into k
     assert_equal(actual, expected)
 
+@given(nsplit_args())
+def test_nconcatenate(Tkx):
+    # nconcatenate args are just nsplit args... split
+    (T, k, x) = Tkx
+    assert x.shape == (T.shape + (k,))
+
+    # a list of args; split along last axis
+    xs = np.split(x, k, -1)
+
+    c = op(NConcatenate(T, k))
+    f = to_python_function(c)
+
+    actual = f(*xs)
+    expected = [x] # the original concatenated array
+    assert_equal(actual, expected)
+
+
 # we're just testing against reference impl; overflow/nan is fine.
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")

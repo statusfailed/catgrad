@@ -87,7 +87,6 @@ class NConcatenate(ops.NSplit, Dagger):
     def to_core(self): return op(ops.NConcatenate(self.N, self.k))
     def dagger(self): return op(ops.NSplit(self.N, self.k))
 
-
 class Add(ops.Add, Dagger):
     def to_core(self): return op(ops.Add(self.T))
     def dagger(self): return op(Copy(self.T))

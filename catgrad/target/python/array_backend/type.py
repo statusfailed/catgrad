@@ -44,6 +44,10 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
+    def nconcatenate(xs: List[A], k: int) -> List[A]:
+        ...
+
+    @staticmethod
     def nadd(dims: Tuple, x: A) -> A:
         ...
 
