@@ -92,6 +92,12 @@ def ncopy(a: Apply, args: List[ast.Name]) -> ast.expr:
     return _call_backend('ncopy', [ast.Constant(value=a.op.T.shape), args[0]])
 
 @expr
+def nsplit(a: Apply, args: List[ast.Name]) -> ast.expr:
+    assert type(a.op) == ops.NSplit
+    assert len(args) == 1
+    return _call_backend('nsplit', [args[0], ast.Constant(value=a.op.k)])
+
+@expr
 def nadd(a: Apply, args: List[ast.Name]) -> ast.expr:
     assert type(a.op) == ops.NAdd
     assert len(args) == 1
@@ -172,6 +178,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     # core operations
     ops.Copy: copy,
     ops.NCopy: ncopy,
+    ops.NSplit: nsplit,
     ops.Discard: discard,
     ops.Add: binop(ast.Add()),
     ops.NAdd: nadd,

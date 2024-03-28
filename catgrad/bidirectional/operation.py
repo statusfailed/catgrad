@@ -79,6 +79,15 @@ class Discard(ops.Discard, Dagger):
     def dagger(self):
         return op(Constant(self.T, 0))
 
+class NSplit(ops.NSplit, Dagger):
+    def to_core(self): return op(ops.NSplit(self.N, self.k))
+    def dagger(self): return op(ops.NConcatenate(self.N, self.k))
+
+class NConcatenate(ops.NSplit, Dagger):
+    def to_core(self): return op(ops.NConcatenate(self.N, self.k))
+    def dagger(self): return op(ops.NSplit(self.N, self.k))
+
+
 class Add(ops.Add, Dagger):
     def to_core(self): return op(ops.Add(self.T))
     def dagger(self): return op(Copy(self.T))

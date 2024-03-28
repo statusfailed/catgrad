@@ -21,6 +21,16 @@ class Torch:
         return torch.broadcast_to(x.reshape(x.shape + (1,)*len(shape)), x.shape + shape)
 
     @staticmethod
+    def nsplit(x: torch.tensor, k: int) -> List[torch.tensor]:
+        if k == 0:
+            return None
+
+        result = torch.split(x, k, -1)
+        if k == 1:
+            return result[0] # unpack list for single values
+        return result
+
+    @staticmethod
     def nadd(dims: Tuple, x: torch.tensor) -> torch.tensor:
         return x.sum(dims)
 

@@ -83,6 +83,17 @@ def ncopy_args(draw):
     return (T, [x]), N
 
 @st.composite
+def nsplit_args(draw):
+    dt = draw(dtypes)
+    shape = draw(shapes(max_elements=st.just(1000)))
+    k = draw(st.integers(min_value=1, max_value=8)) # max split of 8
+
+    T = NdArrayType(shape, dt)
+    Tk = T + NdArrayType((k,), dt)
+    _, [x] = draw(ndarrays(array_type=st.just(Tk)))
+    return (T, k, x)
+
+@st.composite
 def nadd_args(draw):
     dt = draw(dtypes)
     N = draw(shapes(max_elements=st.just(1000)))

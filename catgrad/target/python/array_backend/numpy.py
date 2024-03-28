@@ -22,6 +22,16 @@ class Numpy:
         return np.broadcast_to(x.reshape(x.shape + (1,)*len(shape)), x.shape + shape)
 
     @staticmethod
+    def nsplit(x: np.ndarray, k: int) -> List[np.ndarray]:
+        if k == 0:
+            return None
+
+        result = np.split(x, k, -1)
+        if k == 1:
+            return result[0] # unpack list for single values
+        return result
+
+    @staticmethod
     def nadd(dims: Tuple, x: np.ndarray) -> np.ndarray:
         return x.sum(dims)
 

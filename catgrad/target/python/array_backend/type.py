@@ -40,6 +40,10 @@ class ArrayBackend(Protocol[A]):
         ...
 
     @staticmethod
+    def nsplit(x: A, k: int) -> List[A]:
+        ...
+
+    @staticmethod
     def nadd(dims: Tuple, x: A) -> A:
         ...
 

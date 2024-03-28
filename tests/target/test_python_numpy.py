@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nmax_args
+from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nmax_args, nsplit_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType
@@ -33,6 +33,17 @@ def test_discard(Tx: np.ndarray):
     T, [x] = Tx
     f = to_python_function(op(Discard(T)))
     assert_equal(f(x), [])
+
+@given(nsplit_args())
+def test_nsplit(Tkx):
+    (T, k, x) = Tkx
+    assert x.shape == (T.shape + (k,))
+    c = op(NSplit(T, k))
+    f = to_python_function(c)
+
+    actual = f(x)
+    expected = np.split(x, k, -1) # split the last axis into k
+    assert_equal(actual, expected)
 
 # we're just testing against reference impl; overflow/nan is fine.
 @pytest.mark.filterwarnings("ignore:overflow")

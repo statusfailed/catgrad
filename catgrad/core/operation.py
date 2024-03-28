@@ -25,7 +25,7 @@ class Copy:
 class NCopy:
     # TODO: introduce split/join and mention naturality of Broadcast w.r.t. them.
     """ NCopy is like Copy, but on tensor dimensions.
-    ``NCopy(N,T) : T → N+T`` is like the N-fold copy of a tensor of shape A, then packed into a tensor.
+    ``NCopy(N,T) : N → N+T`` is like the T-fold copy of a tensor of shape N, then packed into a tensor.
     """
     N: NdArrayType
     T: NdArrayType
@@ -37,6 +37,30 @@ class Discard:
     T: NdArrayType
     def source(self): return obj(self.T)
     def target(self): return obj()
+
+@dataclass
+class NSplit:
+    """ ``NSplit(T, k) : T*k → T●T..k...T`` splits a tensor into individual outputs """
+    T: NdArrayType
+    k: int
+    def __post_init__(self):
+        # TODO: this should really be equivalent to discarding.
+        assert self.k > 0, "cannot split into fewer than 1 outputs"
+
+    def source(self):
+        N = NdArrayType((self.k,), self.T.dtype)
+        return obj(self.T + N)
+    def target(self): return obj(*([self.T]*self.k)) # N●..k..●N
+
+@dataclass
+class NConcatenate:
+    """ ``NConcatenate(N, k) : N●N..k...N → N*k`` concatenates k tensors into a single outputs """
+    T: NdArrayType
+    k: int
+    def source(self): return obj(*([self.T]*self.k)) # N●..k..●N
+    def target(self):
+        N = NdArrayType((self.k,), self.T.dtype)
+        return obj(self.T + N)
 
 @dataclass
 class Add:
