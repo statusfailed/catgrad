@@ -80,12 +80,12 @@ class Discard(ops.Discard, Dagger):
         return op(Constant(self.T, 0))
 
 class NSplit(ops.NSplit, Dagger):
-    def to_core(self): return op(ops.NSplit(self.N, self.k))
-    def dagger(self): return op(ops.NConcatenate(self.N, self.k))
+    def to_core(self): return op(ops.NSplit(self.T, self.k))
+    def dagger(self): return op(NConcatenate(self.T, self.k))
 
-class NConcatenate(ops.NSplit, Dagger):
-    def to_core(self): return op(ops.NConcatenate(self.N, self.k))
-    def dagger(self): return op(ops.NSplit(self.N, self.k))
+class NConcatenate(ops.NConcatenate, Dagger):
+    def to_core(self): return op(ops.NConcatenate(self.T, self.k))
+    def dagger(self): return op(NSplit(self.T, self.k))
 
 class Add(ops.Add, Dagger):
     def to_core(self): return op(ops.Add(self.T))
@@ -119,7 +119,7 @@ class Reshape(ops.Reshape, Dagger):
 
 class Permute(ops.Permute, Dagger):
     def to_core(self): return op(ops.Permute(self.T, self.p))
-    def dagger(self): return op(Permute(self.T, np.argsort(self.p).tolist()))
+    def dagger(self): return op(Permute(self.target()(0), np.argsort(self.p).tolist()))
 
 class Gt(ops.Gt, Optic):
     def to_core(self): return op(ops.Gt(self.T))
@@ -184,12 +184,12 @@ class Exponentiate(Lens):
 
 class MatrixMultiply(ops.MatrixMultiply, Lens):
     """ Tensor composition (diagrammatic order) """
-    def to_core(self): return op(ops.MatMul(self.N, self.A, self.B, self.C))
+    def to_core(self): return op(ops.MatrixMultiply(self.N, self.A, self.B, self.C))
     def rev(self):
         N, A, B, C = self.N, self.A, self.B, self.C
         n = len(self.N.shape)
         # all the indices in the batch N stay the same; final two swap.
-        ixs = list(range(n)) + [n+2, n+1]
+        ixs = list(range(n)) + [n+1, n]
 
         lhs = op(Permute(N+A+B, ixs)) @ op(Permute(N+B+C, ixs)) @ copy(obj(N+A+C))
         p = permutation(lhs.target, [2, 1, 0, 3])

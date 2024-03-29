@@ -33,8 +33,8 @@ def compile_model(model, opt, loss):
         "rev_p": F(rev_p), # gradients w.r.t. parameters only
         "step": step_circuit,
     }
-    mod_ast = to_python_class_ast(fns)
-    return to_python_class(fns), P, mod_ast
+    Dynamic, mod_ast = to_python_class(fns, return_ast=True)
+    return Dynamic, P, mod_ast
 
 def rdiff(f):
     """ Take the reverse derivative of a map built from RDOps """

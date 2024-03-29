@@ -36,6 +36,9 @@ class NdArrayType:
     shape: Shape
     dtype: Dtype
 
+    def __post_init__(self):
+        assert type(self.shape) is tuple, "NdArrayType.shape must be a tuple"
+
     @classmethod
     def from_ndarray(cls, x: np.ndarray):
         """ Create an ``NdArrayType`` from an object with shape and dtype """

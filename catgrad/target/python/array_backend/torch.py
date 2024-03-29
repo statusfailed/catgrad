@@ -25,7 +25,9 @@ class Torch:
         if k == 0:
             return None
 
-        result = torch.split(x, k, -1)
+        # NOTE: this interface is subtly different to numpy!
+        # You specify the *size* of the chunk, not the number of splits!
+        result = torch.split(x, 1, dim=-1)
         if k == 1:
             return result[0] # unpack list for single values
         return result
@@ -55,4 +57,4 @@ class Torch:
 
     @staticmethod
     def compose(x: torch.tensor, y: torch.tensor, axes: int) -> torch.tensor:
-        return torch.tensordot(x, y, axes=axes)
+        return torch.tensordot(x, y, dims=axes)

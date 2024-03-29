@@ -113,11 +113,11 @@ def to_python_class_ast(fs: dict[str, OpenHypergraph], class_name: str = 'Dynami
         raise ValueError("cannot compile OpenHypergraph with PythonOp to AST")
     return _to_python_class_ast(fs, class_name)
 
-def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
+def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic', return_ast=False):
     filename='<string>'
     # call unsafe _to_python_class_ast because we want to process *with* the ops.
-    python_ops = _extract_python_ops(fs)
-    mod_ast = _to_python_class_ast(fs, class_name, python_op_symbols = python_ops)
+    python_op_symbols = _extract_python_ops(fs)
+    mod_ast = _to_python_class_ast(fs, class_name, python_op_symbols=python_op_symbols)
     env: Any = {}
     exec(compile(mod_ast, filename=filename, mode='exec'), env)
 
@@ -126,9 +126,11 @@ def to_python_class(fs: dict[str, OpenHypergraph], class_name: str = 'Dynamic'):
 
     # incredibly cursed escape hatch: instead of actually turning PythonOps into
     # AST, we just attach them to the class after.
-    for x, symbol in python_ops.items():
+    for x, symbol in python_op_symbols.items():
         setattr(Dynamic, symbol, x)
 
+    if return_ast:
+        return Dynamic, mod_ast
     return Dynamic
 
 def to_python_function(f: OpenHypergraph, function_name: str = 'fn', filename='<string>', array_backend=Numpy) -> Callable:
