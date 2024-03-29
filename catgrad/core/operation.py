@@ -199,8 +199,24 @@ def exp1(T: NdArrayType):
     return (op(Constant(T, math.e)) @ identity(obj(T))) >> op(Power(T))
 
 ################################################################################
-# Matrix multiplication
+# Matrix multiplication and tensor composition
 
+@dataclass
+class MatrixMultiply:
+    """ Batched matrix multiplication """
+    N: NdArrayType
+    A: NdArrayType
+    B: NdArrayType
+    C: NdArrayType
+    def __post_init__(self):
+        # N can be any type, but A, B, C must be a single dimension
+        for t in [self.A, self.B, self.C]:
+            assert len(t.shape) == 1
+
+    def source(self): return obj(self.N+self.A+self.B, self.N+self.B+self.C)
+    def target(self): return obj(self.N+self.A+self.C)
+
+# TODO: should we get rid of this?
 @dataclass
 class Compose:
     """ Composition of tensors ``f : A → B`` and ``g : B → C`` along ``B``, so
@@ -216,4 +232,4 @@ class Compose:
 ################################################################################
 # All the array operations in a union type
 
-operation = Copy | NCopy | Discard | Add | NAdd | Constant | Reshape | Permute | Multiply | Compose
+operation = Copy | NCopy | NSplit | NConcatenate | Discard | Add | NAdd | Constant | Reshape | Permute | Multiply | MatrixMultiply | Compose

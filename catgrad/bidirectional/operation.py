@@ -182,6 +182,20 @@ class Exponentiate(Lens):
 
         return rev
 
+class MatrixMultiply(ops.MatrixMultiply, Lens):
+    """ Tensor composition (diagrammatic order) """
+    def to_core(self): return op(ops.MatMul(self.N, self.A, self.B, self.C))
+    def rev(self):
+        N, A, B, C = self.N, self.A, self.B, self.C
+        n = len(self.N.shape)
+        # all the indices in the batch N stay the same; final two swap.
+        ixs = list(range(n)) + [n+2, n+1]
+
+        lhs = op(Permute(N+A+B, ixs)) @ op(Permute(N+B+C, ixs)) @ copy(obj(N+A+C))
+        p = permutation(lhs.target, [2, 1, 0, 3])
+        rhs = op(MatrixMultiply(N, A, C, B)) @ op(MatrixMultiply(N, B, A, C))
+        return lhs >> p >> rhs
+
 
 class Compose(ops.Compose, Lens):
     """ Tensor composition (diagrammatic order) """

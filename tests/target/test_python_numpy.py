@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nmax_args, nsplit_args
+from tests.strategies import dtypes, shapes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nmax_args, nsplit_args, matrix_multiply_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType
@@ -160,6 +160,13 @@ def test_divide(Tx: np.ndarray):
         expected = x // y
     assert_equal(f(x, y), [expected])
 
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value")
+@given(matrix_multiply_args())
+def test_matrix_multiply(NABCxy: np.ndarray):
+    N, A, B, C, x, y = NABCxy
+    f = to_python_function(op(MatrixMultiply(N, A, B, C)))
+    assert_equal(f(x, y), [x @ y])
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")

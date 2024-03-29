@@ -21,10 +21,10 @@ floating_dtypes = st.sampled_from([Dtype.float32])
 
 MAX_ELEMENTS = 1_000_000
 @st.composite
-def shapes(draw, max_elements=st.just(MAX_ELEMENTS)):
+def shapes(draw, max_elements=st.just(MAX_ELEMENTS), ndim=st.integers(min_value=0, max_value=6)):
     # draw shapes with total number of elements not exceeding 1e6
     max_elements = draw(max_elements)
-    ndim = draw(st.integers(min_value=0, max_value=6))
+    ndim = draw(ndim)
     max_dim = math.floor(max_elements**(1/ndim)) if ndim > 0 else max_elements
     dimensions = st.integers(min_value=0, max_value=max_dim)
     result = draw(st.lists(elements=dimensions, min_size=ndim, max_size=ndim))
@@ -58,6 +58,22 @@ def composable_ndarrays(draw):
     _, [x] = draw(ndarrays(array_type=st.just(A+B), n=1))
     _, [y] = draw(ndarrays(array_type=st.just(B+C), n=1))
     return A, B, C, x, y
+
+@st.composite
+def matrix_multiply_args(draw):
+    N = draw(ndarraytypes(shape=shapes(max_elements=st.just(100))))
+    A_shape = draw(shapes(max_elements=st.just(100), ndim=st.just(1)))
+    B_shape = draw(shapes(max_elements=st.just(100), ndim=st.just(1)))
+    C_shape = draw(shapes(max_elements=st.just(100), ndim=st.just(1)))
+
+    A = NdArrayType(A_shape, N.dtype)
+    B = NdArrayType(B_shape, N.dtype)
+    C = NdArrayType(C_shape, N.dtype)
+
+    _, [x] = draw(ndarrays(array_type=st.just(N+A+B), n=1))
+    _, [y] = draw(ndarrays(array_type=st.just(N+B+C), n=1))
+
+    return N, A, B, C, x, y
 
 @st.composite
 def reshape_args(draw):

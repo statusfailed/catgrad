@@ -199,6 +199,7 @@ OP_HANDLERS: dict[Type[operation], Callable[[Apply], List[ast.Assign]]] = {
     ops.Divide: divide,
     ops.Power: binop(ast.Pow()),
     ops.Constant: constant,
+    ops.MatrixMultiply: binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
     ops.Compose: compose, # binop(ast.MatMult()), # TODO: use binop matmult if len(B) == 1?
     ops.Reshape: reshape,
     ops.Permute: permute,
