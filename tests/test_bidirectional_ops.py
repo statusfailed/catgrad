@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from tests.utils import assert_equal
-from tests.strategies import integral_dtypes, floating_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args
+from tests.strategies import integral_dtypes, floating_dtypes, ndarrays, ndarraytypes, composable_ndarrays, reshape_args, ncopy_args, nadd_args, nsplit_args
 import tests.strategies as strategies
 
 from catgrad.signature import NdArrayType, Dtype
@@ -68,6 +68,41 @@ def test_rd_discard(Tx: np.ndarray):
     assert_equal(arrow(x), [])
     assert_equal(fwd(x), [])
     assert_equal(rev(), [np.zeros(T.shape, Numpy.dtype(T.dtype))])
+
+@given(nsplit_args())
+def test_rd_nsplit(Tkx):
+    (T, k, x) = Tkx
+    e = NSplit(T, k)
+
+    core = to_python_function(e.to_core())
+    fwd  = to_python_function(F(e.fwd()))
+    rev  = to_python_function(F(e.rev()))
+
+    expected_y = np.split(x, k, -1)
+    dy = expected_y[0]
+
+    assert_equal(core(x), expected_y)
+    assert_equal(fwd(x), expected_y)
+    assert_equal(rev(*expected_y), [x])
+
+@given(nsplit_args())
+def test_rd_nconcatenate(Tkx):
+    (T, k, x) = Tkx
+    e = NConcatenate(T, k)
+
+    # actual inputs
+    xs = np.split(x, k, -1)
+
+    core = to_python_function(e.to_core())
+    fwd  = to_python_function(F(e.fwd()))
+    rev  = to_python_function(F(e.rev()))
+
+    expected_y = x
+    dy = expected_y
+
+    assert_equal(core(*xs), [expected_y])
+    assert_equal(fwd(*xs), [expected_y])
+    assert_equal(rev(dy), xs)
 
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value")
