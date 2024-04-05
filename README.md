@@ -71,5 +71,6 @@ Train simple MLPs for the
 Target backends we plan to support soon:
 
 - [x] Python/numpy
+- [x] Python/torch
 - [ ] Python/[tinygrad](https://github.com/tinygrad/tinygrad/)
 - [ ] C++/[GGML](https://github.com/ggerganov/ggml)
