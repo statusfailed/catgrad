@@ -26,7 +26,8 @@ class Numpy:
         if k == 0:
             return None
 
-        result = np.split(x, k, -1)
+        # NOTE: nsplit *removes* final dimension (as if keepdims=False)
+        result = [ x.reshape(x.shape[:-1]) for x in np.split(x, k, -1) ]
         if k == 1:
             return result[0] # unpack list for single values
         return result
@@ -35,6 +36,7 @@ class Numpy:
     def nconcatenate(xs: List[np.ndarray], k: int) -> List[np.ndarray]:
         assert len(xs) == k
         if k == 0: return None
+        xs = [np.expand_dims(x, -1) for x in xs]
         return np.concatenate(xs, axis=-1)
 
     @staticmethod

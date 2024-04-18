@@ -27,7 +27,7 @@ class Torch:
 
         # NOTE: this interface is subtly different to numpy!
         # You specify the *size* of the chunk, not the number of splits!
-        result = torch.split(x, 1, dim=-1)
+        result = [ a.squeeze(-1) for a in torch.split(x, 1, dim=-1) ]
         if k == 1:
             return result[0] # unpack list for single values
         return result
@@ -36,6 +36,7 @@ class Torch:
     def nconcatenate(xs: List[torch.tensor], k: int) -> List[torch.tensor]:
         assert len(xs) == k
         if k == 0: return None
+        xs = [ a.unsqueeze(-1) for a in xs ]
         return torch.concatenate(xs, axis=-1)
 
     @staticmethod

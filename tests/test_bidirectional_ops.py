@@ -78,7 +78,7 @@ def test_rd_nsplit(Tkx):
     fwd  = to_python_function(F(e.fwd()))
     rev  = to_python_function(F(e.rev()))
 
-    expected_y = np.split(x, k, -1)
+    expected_y = [ x.reshape(x.shape[:-1]) for x in np.split(x, k, -1) ]
     dy = expected_y[0]
 
     assert_equal(core(x), expected_y)
@@ -90,8 +90,10 @@ def test_rd_nconcatenate(Tkx):
     (T, k, x) = Tkx
     e = NConcatenate(T, k)
 
-    # actual inputs
-    xs = np.split(x, k, -1)
+    # actual inputs. Note that if list has len 1, it's already unpacked (bad choice - FIXME)
+    xs = Numpy.nsplit(x, k)
+    if k == 1:
+        xs = [xs]
 
     core = to_python_function(e.to_core())
     fwd  = to_python_function(F(e.fwd()))
