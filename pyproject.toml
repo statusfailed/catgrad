@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">= 3.8"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
   "numpy~=1.23.3",
