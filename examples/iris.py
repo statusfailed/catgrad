@@ -2,10 +2,12 @@ import ast
 import argparse
 import numpy as np
 import pandas as pd
+import torch
 
 # import catgrad and the python Numpy array backend
 from catgrad import *
 from catgrad.target.python.array_backend import Numpy
+from catgrad.target.python.array_backend import Torch
 
 # Tensor types: Iris has a 4-dimensional input and is a 3-class classification
 # problem.
@@ -17,6 +19,8 @@ def accuracy(y_pred, y_true):
     assert y_pred.shape == y_true.shape
     num = np.argmax(y_pred, axis=1) == np.argmax(y_true, axis=1)
     den = len(y_true)
+    if isinstance(num, torch.Tensor):
+        num = num.numpy()
     return np.sum(num) / den
 
 # Compute accuracy of the trained model predict(p, -).
@@ -24,7 +28,7 @@ def model_accuracy(predict, p, x, y):
     [y_hats] = predict(*p, x)
     return accuracy(y_hats, y)
 
-def load_iris(path):
+def load_iris(path, use_torch):
     iris = pd.read_csv(path)
 
     # load training data
@@ -36,11 +40,18 @@ def load_iris(path):
     # one-hot encode 3 classes
     train_labels = np.identity(3)[train_labels]
 
+    if use_torch:
+        train_input = torch.tensor(train_input, dtype=torch.float32)
+        train_labels = torch.tensor([0]*50 + [1]*50 + [2]*50).reshape(-1)
+        train_labels = torch.eye(3)[train_labels]
+
     return train_input, train_labels
 
 def main():
+    torch.set_default_dtype(torch.float32)
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--iris-data', default='data/iris.csv')
+    parser.add_argument('--use-torch', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('model', default='linear')
     args = parser.parse_args()
 
@@ -70,20 +81,25 @@ def main():
     # Compile to Python + print the source
     CompiledModel, ParamType, model_ast = compile_model(model, layers.sgd(learning_rate), layers.mse)
     print(ast.unparse(model_ast))
-
     # Instantiate compiled model with a backend (Numpy)
-    compiled_model = CompiledModel(Numpy)
+    if args.use_torch:
+        compiled_model = CompiledModel(Torch)
+    else:
+        compiled_model = CompiledModel(Numpy)
 
     # wrap predict and step for convenience.
     predict = lambda *args: compiled_model.predict(*args)
     step = lambda *args: compiled_model.step(*args)
 
     # do param initialization manually for now.
-    p = [ np.random.normal(0, 0.01, T.shape).astype(Numpy.dtype(T.dtype)) for T in ParamType ]
+    if args.use_torch:
+        p = [torch.randn(size=T.shape, dtype=Torch.dtype(T.dtype))*0.01 for T in ParamType]
+    else:
+        p = [np.random.normal(0, 0.01, T.shape).astype(Numpy.dtype(T.dtype)) for T in ParamType]
 
     # Load data from CSV
     print("loading data...")
-    train_input, train_labels = load_iris(args.iris_data)
+    train_input, train_labels = load_iris(args.iris_data, args.use_torch)
 
     print("training...")
     N = len(train_input)
