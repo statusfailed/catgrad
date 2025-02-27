@@ -128,3 +128,14 @@ def test_compose_assoc():
     dy = np.ones((1,4), np.int32)
 
     d = F(B.adapt(B(c), c.source, c.target))
+
+def test_ndarraytype_addition():
+    A = NdArrayType((1,), Dtype.int32)
+    B = NdArrayType((2,), Dtype.int32)
+    C = NdArrayType((2,), Dtype.float32)
+
+    assert (A + B).shape == (1,2)
+    assert (A + 4).shape == (1,4)
+    assert (5 + B).shape == (5,2)
+    with pytest.raises(ValueError):
+        A + C
