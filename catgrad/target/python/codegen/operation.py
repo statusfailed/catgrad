@@ -177,7 +177,7 @@ def permute(a: Apply, args: List[ast.Name]) -> ast.Call:
     assert type(a.op) == ops.Permute
     assert len(args) == 1
     # permutation array as a constant expression
-    p_arg = ast.List(elts=[ast.Constant(i, ctx=ast.Load()) for i in a.op.p], ctx=ast.Load())
+    p_arg = ast.List(elts=[ast.Constant(i) for i in a.op.p], ctx=ast.Load())
     return _call_backend('permute', [ args[0], p_arg ])
 
 # Handlers for each operation

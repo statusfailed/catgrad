@@ -69,7 +69,7 @@ def _mk_function_definition(f: OpenHypergraph, def_symbols: dict[Definition, str
             body.extend(op_handler(apply))
 
     rval = ast.List(elts=[ load(i) for i in fn.returns ], ctx=ast.Load())
-    body.append(ast.Return(value=rval, ctx=ast.Load()))
+    body.append(ast.Return(value=rval))
     return ast.FunctionDef(
         name = name,
         args = args,

@@ -78,6 +78,7 @@ def test_bidirectional_copy(Xcv):
     actual = f(*args, *dy)
     assert_equal(expected, actual)
 
+@pytest.mark.filterwarnings("ignore:overflow")
 @given(strategies.objects_and_values(negate))
 def test_double_negate(Xcv):
     X, c, v = Xcv
