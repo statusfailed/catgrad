@@ -46,19 +46,25 @@ class NdArrayType:
 
     # coproduct of shapes for convenience!
     # TODO: should this be __mul__? It's the cartesian product!
-    def __add__(x, y):
+    def __add__(self, y):
         """ Take the coproduct of two objects """
         # allow e.g., NdArrayType((1,2,3), int) + 4 = NdArrayType((1,2,3,4), int)
-        # and 0 + NdArrayType((1,2,3), int) = NdArrayType((0,1,2,3), int)
-        if type(x) is NdArrayType and type(y) is int:
-            return x + NdArrayType((y,), x.dtype)
-        if type(y) is int and type(x) is NdArrayType:
-            return x + NdArrayType((y,), x.dtype)
+        if type(y) is int:
+            return self + NdArrayType((y,), self.dtype)
 
-        if x.dtype != y.dtype:
-            raise ValueError(f"Can't concatenate {x} and {y} with differing dtypes")
+        if self.dtype != y.dtype:
+            raise ValueError(f"Can't concatenate {self} and {y} with differing dtypes")
 
-        return NdArrayType(x.shape + y.shape, x.dtype)
+        return NdArrayType(self.shape + y.shape, self.dtype)
+
+    def __radd__(self, y):
+        # Allow 0 + NdArrayType((1,2,3), int) = NdArrayType((0,1,2,3), int)
+        if type(y) is int:
+           return NdArrayType((y,), self.dtype) + self
+        else:
+           raise ValueError(f"Can't concatenate {y} and {self}")
+
+
 
 def obj(*args) -> FiniteFunction:
     """ Create an object of the category (a FiniteFunction ``X → Σ₀``) from a
