@@ -12,14 +12,14 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-  "numpy~=1.23.3",
+  "numpy~=1.26.4",
   "open-hypergraphs~=0.1.2",
 ]
 [project.optional-dependencies]
 dev = [
   "hypothesis",
   "pytest",
-  "scipy~=1.10.0",
+  "scipy~=1.15.1",
 ]
 
 [project.urls]
