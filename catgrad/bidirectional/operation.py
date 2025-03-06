@@ -1,12 +1,12 @@
 import numpy as np
 from dataclasses import dataclass
 from abc import abstractmethod
-from open_hypergraphs import OpenHypergraph, FiniteFunction, IndexedCoproduct, FrobeniusFunctor
+from open_hypergraphs import OpenHypergraph, FiniteFunction
 
-from catgrad.signature import NdArrayType, obj, op, sigma_0, sigma_1
+from catgrad.signature import NdArrayType, obj, op
 import catgrad.core.operation as ops
 from catgrad.special.definition import Definition
-from catgrad.combinators import *
+from catgrad.combinators import identity, twist, permutation, canonical
 
 class Optic:
     @abstractmethod
@@ -280,7 +280,6 @@ class Sigmoid(Definition, Lens):
     def arrow(self):
         # here we write a morphism in *core*!
         T = self.T
-        U = NdArrayType((), T.dtype)
 
         full1 = op(ops.Constant(T, 1))
 
