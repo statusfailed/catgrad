@@ -323,6 +323,65 @@ class Sigmoid(Definition, Lens):
 
 sigmoid = canonical(lambda T: op(Sigmoid(T)))
 
+@dataclass(frozen=True)
+class Tanh(Definition, Lens):
+    T: NdArrayType
+    def source(self): return obj(self.T)
+    def target(self): return obj(self.T)
+
+    def __post_init__(self):
+        if not self.T.dtype.is_floating():
+            raise ValueError("Tanh is not defined for non-floating-point dtypes")
+
+    ########################################
+    # Tanh as a Core definition
+
+    # The definition of the Tanh function in terms of Core ops
+    # tanh(x) = 2*sigmoid(2x) - 1
+    #
+    def arrow(self):
+        # here we write a morphism in *core*!
+        T = self.T
+
+        # The constants -1 and 2
+        minus1 = op(ops.Constant(T, -1))
+        two = op(ops.Constant(T, 2))
+
+        # 2*x
+        twox = ((two @ identity(obj(T))) >> op(ops.Multiply(T)))
+
+        # sigmoid(2*x)
+        sig = twox >> sigmoid(obj(T))
+
+        # 2 * sigmoid(2*x)
+        sig = (two @ sig) >> op(ops.Multiply(T))
+
+        # 2 * sigmoid(2*x) - 1
+        return (sig @ minus1) >> op(ops.Add(T))
+
+    ########################################
+    # Tanh as an Optic
+
+    # we want this to appear as a Definition in core, so we just return the op
+    # as a singleton diagram.
+    def to_core(self):
+        return op(self)
+
+    # The forward map is like Lens, but we copy the *output*, not the input.
+    def fwd(self):
+        return op(self) >> copy(self.source())
+
+    # The reverse map is 1 - tanh(x)^2
+    # FIXME
+    def rev(self):
+        T = obj(self.T)
+        pow = exponentiate(2)(T) >> tanh(T) # tanh(x)^2
+        grad = (constant(1)(T) @ pow) >> subtract(T) # 1 - tanh(x)^2
+        return (grad @ identity(T)) >> multiply(T) # (1 - tanh(x)^2) * dy
+
+
+tanh = canonical(lambda T: op(Tanh(T)))
+
 def relu(X):
     return copy(X) >> (gt_constant(0)(X) @ identity(X)) >> multiply(X)
 
