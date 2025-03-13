@@ -18,6 +18,9 @@ def linear(A: NdArrayType, B: NdArrayType, C: NdArrayType):
 def bias(A: NdArrayType):
     return (parameter(obj(A)) @ identity(obj(A))) >> add(obj(A))
 
+def linear_with_bias(A: NdArrayType, B: NdArrayType, C: NdArrayType):
+    return linear(A, B, C) >> bias(A+C)
+
 sigmoid = canonical(lambda T: op(Sigmoid(T)))
 
 def dense(A: NdArrayType, B: NdArrayType, C: NdArrayType, activation=sigmoid):
