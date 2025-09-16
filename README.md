@@ -3,6 +3,8 @@
 <h1>catgrad</h1>
 </div>
 
+NOTE: Catgrad is now a Rust project maintained by [Hellas.AI](https://github.com/hellas-ai/catgrad)!
+
 You like category theory? You like tinygrad? You love catgrad! ❤️
 
 catgrad is a bit different: instead of using autograd to train, you *compile*
