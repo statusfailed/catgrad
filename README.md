@@ -3,7 +3,7 @@
 <h1>catgrad</h1>
 </div>
 
-NOTE: Catgrad is now a Rust project maintained by [Hellas.AI](https://github.com/hellas-ai/catgrad)!
+<h2> ⚠️ NOTE: Catgrad is now a Rust project maintained by Hellas.AI: <a href="https://github.com/hellas-ai/catgrad">github.com/hellas-ai/catgrad</a> ⚠️</h2>
 
 You like category theory? You like tinygrad? You love catgrad! ❤️
 
